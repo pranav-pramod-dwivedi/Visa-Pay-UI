@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Residential Address</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --visa-dark: #002D8F;
+            --surface: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface);
+            color: #0F172A;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SKELETON SHIMMER (850ms) --- */
+        .skeleton-block {
+            background: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+        .skeleton-block::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: shimmer 0.8s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        #skeleton-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 100;
+            transition: opacity 0.4s ease-out;
+        }
+
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+        #main-content { opacity: 0; transform: translateY(10px); transition: 0.4s ease-out; }
+        .loaded #main-content { opacity: 1; transform: translateY(0); }
+
+        .info-group {
+            border: 1px solid #F1F5F9;
+            border-radius: 24px;
+        }
+
+        .locked-field {
+            background-color: #fafbfc;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative">
+
+    <!-- 1. Skeleton Shimmer -->
+    <div id="skeleton-screen" class="p-6">
+        <div class="w-10 h-10 rounded-full skeleton-block mb-10"></div>
+        <div class="h-8 w-40 skeleton-block mb-10 px-2"></div>
+        <div class="space-y-6">
+            <div class="h-64 w-full rounded-3xl skeleton-block"></div>
+        </div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen pb-20">
+        
+        <header class="px-5 py-6 flex justify-between items-center relative">
+            <a href="profile.html" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 active:scale-90 transition-transform">
+                <i class="fa-solid fa-chevron-left text-[14px]"></i>
+            </a>
+            <h1 class="text-[14px] font-extrabold text-slate-900">Residential Address</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <section class="px-5 space-y-6">
+            <div class="flex justify-between items-center px-2">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Official Record</h3>
+                <span class="text-[8px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase">Verified Address</span>
+            </div>
+
+            <div class="info-group bg-white overflow-hidden">
+                <!-- Street -->
+                <div class="p-4 border-b border-slate-50 locked-field">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Street</p>
+                    <p class="text-[13px] font-bold text-slate-800">1846 rue Garneau</p>
+                </div>
+                <!-- City & State -->
+                <div class="grid grid-cols-2 border-b border-slate-50">
+                    <div class="p-4 border-r border-slate-50 locked-field">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">City</p>
+                        <p class="text-[13px] font-bold text-slate-800">Quebec</p>
+                    </div>
+                    <div class="p-4 locked-field">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">State / Province</p>
+                        <p class="text-[13px] font-bold text-slate-800">Quebec</p>
+                    </div>
+                </div>
+                <!-- ZIP Code -->
+                <div class="p-4 border-b border-slate-50 locked-field">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Zip Code</p>
+                    <p class="text-[13px] font-bold text-slate-800">G1V 3V5</p>
+                </div>
+                <!-- Country -->
+                <div class="p-4 border-b border-slate-50 locked-field">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Country</p>
+                    <p class="text-[13px] font-bold text-slate-800">Canada</p>
+                </div>
+                <!-- Phone -->
+                <div class="p-4 locked-field">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Phone Number</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-extrabold text-blue-600">+1</span>
+                        <p class="text-[13px] font-bold text-slate-800">418-931-9661</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                <i class="fa-solid fa-circle-info text-slate-300 mt-1"></i>
+                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">
+                    This address is linked to your legal identity and KYC verification. To request a change, please contact Visa Global Compliance through the support portal.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => { document.body.classList.add('loaded'); }, 850); 
+        };
+    </script>
+</body>
+</html>
+

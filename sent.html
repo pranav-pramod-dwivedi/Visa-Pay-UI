@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Send Money - Visa Infinite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F4F6F9;
+            color: #1a1b1e;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        /* --- BACKGROUND AURA --- */
+        .aura-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #F4F6F9; overflow: hidden;
+        }
+        .aura-orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.6;
+            animation: float 10s infinite ease-in-out;
+        }
+        .orb-1 { width: 300px; height: 300px; background: rgba(59, 130, 246, 0.15); top: -50px; left: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.1); bottom: -100px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(20px, 20px) scale(1.1); } }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 20px; display: flex; align-items: center; justify-content: space-between; z-index: 50;
+        }
+
+        /* --- GLOBAL CARD (The Hero) --- */
+        .global-card {
+            margin: 10px 20px 30px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 32px;
+            padding: 24px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
+            min-height: 180px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        
+        .globe-grid {
+            position: absolute; right: -40px; top: -40px; width: 200px; height: 200px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%);
+            animation: spinGlobe 20s linear infinite;
+        }
+        .globe-grid::after {
+            content: ''; position: absolute; inset: 20px; border-radius: 50%;
+            border: 1px dashed rgba(255,255,255,0.15);
+        }
+        @keyframes spinGlobe { 100% { transform: rotate(360deg); } }
+
+        /* --- QUICK SEND ROW --- */
+        .quick-scroll {
+            display: flex; gap: 20px; overflow-x: auto; padding: 0 20px 30px;
+        }
+        .quick-item {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            min-width: 64px; cursor: pointer; transition: transform 0.1s;
+        }
+        .quick-item:active { transform: scale(0.95); }
+        
+        .quick-img {
+            width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
+            border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .add-btn {
+            width: 64px; height: 64px; border-radius: 50%; background: white;
+            display: flex; align-items: center; justify-content: center;
+            color: #3b82f6; font-size: 1.5rem;
+            border: 2px dashed #bfdbfe;
+        }
+
+        /* --- METHODS GRID --- */
+        .methods-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 20px 40px;
+        }
+        .method-card {
+            background: white; border-radius: 24px; padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            transition: transform 0.2s; cursor: pointer;
+        }
+        .method-card:active { transform: scale(0.98); background: #f8fafc; }
+        
+        .m-icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* --- CONFIRMATION MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .confirm-card {
+            background: white; width: 85%; max-width: 320px;
+            border-radius: 30px; padding: 30px; text-align: center;
+            transform: scale(0.9); transition: transform 0.3s;
+        }
+        .modal-overlay.active .confirm-card { transform: scale(1); }
+
+    </style>
+</head>
+<body>
+
+    <!-- BG -->
+    <div class="aura-background">
+        <div class="aura-orb orb-1"></div>
+        <div class="aura-orb orb-2"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 active:scale-95 transition-transform">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h1 class="text-lg font-bold text-gray-800">Transfer Hub</h1>
+        <div class="w-10"></div> <!-- Spacer -->
+    </div>
+
+    <!-- Global Wire Card (Linked to loan.html) -->
+    <div class="global-card" onclick="window.location.href='loan.html'">
+        <div class="globe-grid"></div>
+        <div class="relative z-10">
+            <div class="bg-white/10 backdrop-blur-md w-fit px-3 py-1 rounded-full text-[10px] font-bold text-blue-200 border border-white/10 mb-3">VISA DIRECT</div>
+            <h2 class="text-2xl font-bold font-['Space_Grotesk'] leading-tight mb-1">Global Wire</h2>
+            <p class="text-sm text-slate-300 mb-4">Send to 180+ countries instant.</p>
+            <div class="flex items-center gap-2 text-xs font-bold text-blue-300">
+                <span>Start Transfer</span> <i class="fa-solid fa-arrow-right"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Send Title -->
+    <div class="px-6 mb-4 flex justify-between items-end">
+        <h3 class="text-base font-bold text-gray-800">Quick Resend</h3>
+        <span class="text-xs font-bold text-blue-600 cursor-pointer" onclick="window.location.href='feature.html'">Search</span>
+    </div>
+
+    <!-- Quick Send Carousel -->
+    <div class="quick-scroll hide-scrollbar">
+        <!-- Add New (Updated to pay.html) -->
+        <div class="quick-item" onclick="window.location.href='pay.html'">
+            <div class="add-btn"><i class="fa-solid fa-plus"></i></div>
+            <span class="text-xs font-bold text-gray-500">New</span>
+        </div>
+        <!-- Diivii -->
+        <div class="quick-item" onclick="confirmResend('Diivii', '$1,000.00')">
+            <img src="/Screenshot_2025-12-21-17-28-39-037_com.instagram.lite-edit.jpg" class="quick-img">
+            <span class="text-xs font-bold text-gray-700">Diivii</span>
+        </div>
+        <!-- Mike -->
+        <div class="quick-item" onclick="confirmResend('Mike', '$15,000.00')">
+            <img src="/IMG_20251213_100449.jpg" class="quick-img">
+            <span class="text-xs font-bold text-gray-700">Mike</span>
+        </div>
+        <!-- Raj -->
+        <div class="quick-item" onclick="confirmResend('Raj', '$3,500.00')">
+            <img src="/IMG_20251223_010626.jpg" class="quick-img">
+            <span class="text-xs font-bold text-gray-700">Raj</span>
+        </div>
+        <!-- Divyanshi -->
+        <div class="quick-item" onclick="confirmResend('Divyanshi', '$500.00')">
+            <img src="/IMG_20251221_172718.jpg" class="quick-img">
+            <span class="text-xs font-bold text-gray-700">Divyanshi</span>
+        </div>
+    </div>
+
+    <!-- Methods Grid -->
+    <div class="px-6 mb-4"><h3 class="text-base font-bold text-gray-800">Payment Methods</h3></div>
+    <div class="methods-grid">
+        <!-- To Bank -> loan.html -->
+        <div class="method-card" onclick="window.location.href='loan.html'">
+            <div class="m-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-building-columns"></i></div>
+            <div>
+                <h4 class="font-bold text-gray-800 text-sm">To Bank</h4>
+                <p class="text-[10px] text-gray-400">Account & Routing</p>
+            </div>
+        </div>
+        <!-- Self Transfer -> loan.html -->
+        <div class="method-card" onclick="window.location.href='loan.html'">
+            <div class="m-icon bg-orange-50 text-orange-500"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <div>
+                <h4 class="font-bold text-gray-800 text-sm">Self Transfer</h4>
+                <p class="text-[10px] text-gray-400">Between accounts</p>
+            </div>
+        </div>
+        <!-- To Visa ID -> pay.html -->
+        <div class="method-card" onclick="window.location.href='pay.html'">
+            <div class="m-icon bg-teal-50 text-teal-600"><i class="fa-solid fa-at"></i></div>
+            <div>
+                <h4 class="font-bold text-gray-800 text-sm">To Visa ID</h4>
+                <p class="text-[10px] text-gray-400">Instant & Free</p>
+            </div>
+        </div>
+        <!-- Donation -> External Charity Site -->
+        <div class="method-card" onclick="window.location.href='https://www.redcross.org/'">
+            <div class="m-icon bg-pink-50 text-pink-500"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            <div>
+                <h4 class="font-bold text-gray-800 text-sm">Donation</h4>
+                <p class="text-[10px] text-gray-400">Charity & Non-profits</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESEND MODAL -->
+    <div id="modal" class="modal-overlay">
+        <div class="confirm-card">
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-2xl">
+                <i class="fa-solid fa-rotate-right"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Repeat Transfer?</h3>
+            <p class="text-sm text-gray-500 mb-6">Send <span id="modal-amt" class="font-bold text-gray-800"></span> to <span id="modal-name" class="font-bold text-gray-800"></span> again?</p>
+            
+            <div class="flex gap-3">
+                <button class="flex-1 py-3 font-bold text-gray-500 bg-gray-100 rounded-xl" onclick="closeModal()">Cancel</button>
+                <button class="flex-1 py-3 font-bold text-white bg-blue-600 rounded-xl shadow-lg" onclick="simulateSend()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('modal');
+        
+        function confirmResend(name, amt) {
+            document.getElementById('modal-name').innerText = name;
+            document.getElementById('modal-amt').innerText = amt;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function simulateSend() {
+            closeModal();
+            // Confetti
+            confetti({
+                particleCount: 100, spread: 70, origin: { y: 0.6 },
+                colors: ['#3b82f6', '#10b981']
+            });
+            
+            // Haptic
+            if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        }
+    </script>
+
+</body>
+</html>
+
+
+home

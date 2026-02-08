@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat with Mike</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #e5ded8;
+            background-image: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: #1a1b1e;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 50;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* --- CHAT AREA --- */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px 100px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .date-divider {
+            text-align: center; font-size: 0.65rem; font-weight: 700; color: #9ca3af;
+            background: rgba(255,255,255,0.5); padding: 4px 10px; border-radius: 12px;
+            align-self: center; margin: 20px 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* --- BUBBLES --- */
+        .bubble {
+            max-width: 75%; padding: 10px 16px; border-radius: 20px; position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02); font-size: 0.95rem; line-height: 1.4;
+        }
+        
+        .msg-sent {
+            align-self: flex-end; background: #1a1b1e; color: white; border-bottom-right-radius: 2px;
+        }
+
+        /* --- TRANSACTION BUBBLES --- */
+        .tx-bubble {
+            max-width: 75%; padding: 14px; border-radius: 18px; position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: flex; flex-direction: column;
+        }
+        .tx-received {
+            align-self: flex-start; background: white; color: #1f2937; border: 1px solid #e5e7eb; border-bottom-left-radius: 2px;
+        }
+        .tx-amount { font-size: 1.25rem; font-weight: 700; line-height: 1.1; }
+        .tx-status { font-size: 0.6rem; margin-top: 6px; display: flex; align-items: center; gap: 4px; opacity: 0.6; }
+
+        /* --- FOOTER --- */
+        .chat-footer {
+            background: white; padding: 12px 16px 24px; border-top: 1px solid #f3f4f6; position: relative; z-index: 60;
+        }
+
+        /* --- TOAST --- */
+        .error-toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #EF4444; color: white; padding: 8px 16px; border-radius: 50px;
+            font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
+            opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 100;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); white-space: nowrap;
+        }
+        .error-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border: 1px solid #EF4444 !important; color: #EF4444 !important; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="chat-header">
+        <button onclick="window.location.href='index.html'" class="text-gray-600 p-2 -ml-2">
+            <i class="fa-solid fa-arrow-left text-xl"></i>
+        </button>
+        <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+            <img src="/IMG_20251213_100449.jpg" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=Mike'">
+        </div>
+        <div class="flex-1">
+            <div class="flex items-center gap-2">
+                <h3 class="font-bold text-gray-800 text-lg leading-tight">Mike</h3>
+                <span id="header-total" class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200">
+                    $0.00
+                </span>
+            </div>
+            <p class="text-xs text-gray-500">+1 (212) ••• 880</p>
+        </div>
+        <button class="w-10 h-10 flex items-center justify-center text-gray-600">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+    </div>
+
+    <!-- CHAT HISTORY (Generated via JS) -->
+    <div class="chat-area hide-scrollbar" id="chat-feed"></div>
+
+    <!-- FOOTER -->
+    <div class="chat-footer">
+        <div class="flex gap-3 mb-4">
+            <button onclick="triggerLock()" class="flex-1 bg-gray-200 text-gray-400 font-bold py-3 rounded-full flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-not-allowed">
+                <i class="fa-solid fa-lock text-xs"></i> Pay
+            </button>
+            <button onclick="triggerLock()" class="flex-1 bg-white border border-gray-200 text-gray-300 font-bold py-3 rounded-full flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-not-allowed">
+                <i class="fa-solid fa-lock text-xs"></i> Request
+            </button>
+        </div>
+
+        <div class="relative">
+            <input type="text" id="msg-input" placeholder="Message..." class="w-full bg-gray-100 text-gray-800 rounded-full py-3 pl-5 pr-12 outline-none border border-transparent focus:bg-white focus:border-gray-300 transition-all">
+            <button onclick="ghostSend()" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-blue-600 rounded-full hover:bg-blue-50">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ERROR TOAST -->
+    <div id="error-toast" class="error-toast">
+        <i class="fa-solid fa-circle-exclamation text-lg"></i>
+        <span id="toast-msg">Message Failed to Send</span>
+    </div>
+
+    <script>
+        // --- HISTORY GENERATOR ---
+        const chatFeed = document.getElementById('chat-feed');
+        // Timeline: Feb 2024 to June 2025
+        const months = ["February 2024", "March 2024", "April 2024", "May 2024", "June 2024", "July 2024", "August 2024", "September 2024", "October 2024", "November 2024", "December 2024", "January 2025", "February 2025", "March 2025", "April 2025", "May 2025", "June 2025"];
+        
+        let runningTotal = 0;
+        const targetTotal = 430000;
+
+        function getRandomAmount(min, max) {
+            return parseFloat((Math.random() * (max - min) + min).toFixed(2));
+        }
+
+        // Generate Received Bubble (From Mike)
+        function createTxBubble(amount) {
+            const div = document.createElement('div');
+            div.className = "tx-bubble tx-received";
+            const formattedAmt = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            div.innerHTML = `
+                <span class="text-[9px] font-bold uppercase text-gray-400 mb-1">Received</span>
+                <div class="tx-amount">$${formattedAmt}</div>
+                <div class="tx-status">Credited to ••04</div>
+            `;
+            return div;
+        }
+
+        // Generate Sent Message Bubble (From You)
+        function createMsgBubble() {
+            const div = document.createElement('div');
+            div.className = "bubble msg-sent";
+            div.innerText = "Done";
+            return div;
+        }
+
+        function generateHistory() {
+            // Distribute $430k across ~17 months. Avg ~$25k per month.
+            // Some months high, some low.
+            
+            months.forEach((month) => {
+                // Date Divider
+                const divider = document.createElement('div');
+                divider.className = 'date-divider';
+                divider.innerText = month;
+                chatFeed.appendChild(divider);
+
+                // 1-2 Transactions per month to reach total
+                const txCount = Math.random() > 0.3 ? 1 : 2; 
+                
+                for(let i=0; i<txCount; i++) {
+                    // Calculate roughly how much to add to get near 430k by end
+                    // Just randomize between 15k and 45k
+                    let amt = getRandomAmount(15000, 45000);
+                    
+                    // Adjustment to not overshoot wildly or undershoot
+                    if (runningTotal > targetTotal) amt = 1000; // taper off
+                    
+                    runningTotal += amt;
+                    
+                    // 1. Mike sends money
+                    chatFeed.appendChild(createTxBubble(amt));
+                    
+                    // 2. You say "Done"
+                    chatFeed.appendChild(createMsgBubble());
+                }
+            });
+
+            // End Marker
+            const end = document.createElement('div');
+            end.className = "text-center text-[10px] text-gray-400 mt-4 mb-2";
+            end.innerText = "No further transactions";
+            chatFeed.appendChild(end);
+
+            // Update Header Total
+            document.getElementById('header-total').innerText = "Total: $" + runningTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        generateHistory();
+        chatFeed.scrollTop = chatFeed.scrollHeight;
+
+
+        // --- LOCK & ERROR LOGIC ---
+        const toast = document.getElementById('error-toast');
+        const msg = document.getElementById('toast-msg');
+
+        function triggerLock() {
+            msg.innerText = "Payments are currently locked";
+            showToast();
+        }
+
+        function ghostSend() {
+            const input = document.getElementById('msg-input');
+            const val = input.value.trim();
+            
+            if (val) {
+                msg.innerText = "Message Failed to Send";
+                input.classList.add('shake');
+                showToast();
+                setTimeout(() => {
+                    input.classList.remove('shake');
+                    input.value = "";
+                }, 1500);
+            }
+        }
+
+        function showToast() {
+            toast.classList.add('show');
+            if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        document.getElementById('msg-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') ghostSend();
+        });
+    </script>
+
+</body>
+</html>
+

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Receive - Visa Infinite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F4F6F9;
+            color: #1a1b1e;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- BACKGROUND --- */
+        .aura-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #F4F6F9; overflow: hidden;
+        }
+        .aura-orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.6;
+            animation: float 10s infinite ease-in-out;
+        }
+        .orb-1 { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.15); top: -50px; left: -100px; } /* Emerald */
+        .orb-2 { width: 400px; height: 400px; background: rgba(59, 130, 246, 0.1); bottom: -100px; right: -50px; animation-delay: -5s; } /* Blue */
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, 20px) scale(1.1); }
+        }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        /* --- QR CARD --- */
+        .qr-card-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            padding: 20px;
+        }
+
+        .qr-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 32px;
+            padding: 30px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* QR Code & Scan Line */
+        .qr-wrapper {
+            position: relative;
+            background: white;
+            padding: 15px;
+            border-radius: 24px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+            margin: 20px auto;
+            width: fit-content;
+            overflow: hidden;
+        }
+        .qr-img { width: 200px; height: 200px; mix-blend-mode: multiply; }
+        
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(to right, transparent, #3b82f6, transparent);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            animation: scan 2.5s infinite ease-in-out;
+            opacity: 0.8;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* User Info */
+        .user-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #F1F5F9; padding: 6px 12px; border-radius: 50px;
+            font-size: 0.85rem; font-weight: 600; color: #475569;
+            margin-top: 10px; cursor: pointer; transition: background 0.2s;
+        }
+        .user-pill:active { background: #e2e8f0; }
+
+        /* --- ACTIONS --- */
+        .actions {
+            display: flex; gap: 12px; justify-content: center;
+            margin-top: 10px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 0.9rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform 0.1s;
+        }
+        .action-btn:active { transform: scale(0.96); }
+        
+        .btn-primary { background: #1a1b1e; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-secondary { background: white; color: #1a1b1e; border: 1px solid #e5e7eb; }
+
+        /* --- NFC TOGGLE (Bottom) --- */
+        .nfc-zone {
+            padding: 0 30px 40px;
+            z-index: 50;
+        }
+        .nfc-bar {
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid white;
+            border-radius: 24px;
+            padding: 16px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* --- TOAST --- */
+        .toast {
+            position: fixed; top: 100px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: #1a1b1e; color: white;
+            padding: 10px 20px; border-radius: 50px;
+            font-size: 0.8rem; font-weight: 600;
+            opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 100;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* --- AMOUNT MODAL --- */
+        .amt-modal {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px); z-index: 60;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .amt-modal.active { opacity: 1; pointer-events: all; }
+
+    </style>
+</head>
+<body>
+
+    <!-- BG -->
+    <div class="aura-background">
+        <div class="aura-orb orb-1"></div>
+        <div class="aura-orb orb-2"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 active:scale-95 transition-transform">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h1 class="text-lg font-bold text-gray-800">Receive Money</h1>
+    </div>
+
+    <!-- QR Card -->
+    <div class="qr-card-container">
+        <div class="qr-card" id="main-card">
+            <!-- Profile -->
+            <div class="flex flex-col items-center mb-4">
+                <div class="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-blue-500 to-green-400 mb-2">
+                    <img src="/IMG_20251214_013513.jpg" class="w-full h-full rounded-full object-cover border-2 border-white">
+                </div>
+                <h2 class="text-lg font-bold text-gray-900 leading-none">Pranav D</h2>
+                <div class="user-pill" onclick="copyID()">
+                    <span id="visa-id">pranav_d_18@visa</span>
+                    <i class="fa-regular fa-copy text-xs"></i>
+                </div>
+            </div>
+
+            <!-- QR -->
+            <div class="qr-wrapper">
+                <div class="scan-line"></div>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=visa://pay?pa=pranav_d_18@visa&pn=Pranav%20D" class="qr-img" alt="QR Code">
+            </div>
+
+            <p class="text-xs text-gray-400 font-medium mb-6">Scan with any Payment App</p>
+
+            <!-- Buttons -->
+            <div class="actions">
+                <button class="action-btn btn-secondary" onclick="openAmtModal()">
+                    <i class="fa-solid fa-calculator"></i> Set Amount
+                </button>
+                <button class="action-btn btn-primary" onclick="shareQR()">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NFC Toggle -->
+    <div class="nfc-zone">
+        <div class="nfc-bar">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <i class="fa-solid fa-wifi rotate-90"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-800">Tap to Receive</p>
+                    <p class="text-[10px] text-gray-500">Turn phone into POS terminal</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" value="" class="sr-only peer" onchange="toggleNFC(this)">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-msg">Copied to clipboard</span>
+    </div>
+
+    <!-- Amount Input Modal -->
+    <div id="amt-modal" class="amt-modal">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Enter Amount</h2>
+        <div class="flex items-center justify-center mb-8 border-b-2 border-gray-200 pb-2 w-40">
+            <span class="text-3xl font-bold text-gray-400 mr-2">$</span>
+            <input type="number" id="custom-amt" class="text-4xl font-bold text-center w-full outline-none bg-transparent" placeholder="0" autofocus>
+        </div>
+        <div class="flex gap-4">
+            <button class="px-8 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100" onclick="closeAmtModal()">Cancel</button>
+            <button class="px-8 py-3 rounded-xl font-bold bg-blue-600 text-white shadow-lg" onclick="updateQR()">Generate</button>
+        </div>
+    </div>
+
+    <script>
+        // Copy ID
+        function copyID() {
+            const id = document.getElementById('visa-id').innerText;
+            navigator.clipboard.writeText(id).then(() => {
+                showToast("ID Copied to clipboard");
+                if(navigator.vibrate) navigator.vibrate(20);
+            });
+        }
+
+        // Share
+        function shareQR() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Visa ID',
+                    text: 'Pay me on Visa Infinite: pranav_d_18@visa',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                showToast("Share sheet opened (Simulated)");
+            }
+        }
+
+        // NFC Toggle
+        function toggleNFC(checkbox) {
+            if(checkbox.checked) {
+                showToast("Terminal Mode Active");
+                document.body.style.backgroundColor = "#e0f2fe"; // Light blue tint
+            } else {
+                document.body.style.backgroundColor = "#F4F6F9";
+            }
+            if(navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // Amount Modal Logic
+        const modal = document.getElementById('amt-modal');
+        const input = document.getElementById('custom-amt');
+
+        function openAmtModal() {
+            modal.classList.add('active');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeAmtModal() {
+            modal.classList.remove('active');
+            input.value = "";
+        }
+
+        function updateQR() {
+            const val = input.value;
+            if(val) {
+                showToast(`QR generated for $${val}`);
+                closeAmtModal();
+            }
+        }
+
+        // Utils
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = text;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+    </script>
+
+</body>
+</html>
+

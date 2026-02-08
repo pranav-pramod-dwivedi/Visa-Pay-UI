@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Official Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --visa-dark: #002D8F;
+            --surface: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface);
+            color: #0F172A;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SKELETON SHIMMER (850ms) --- */
+        .skeleton-block {
+            background: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            border-radius: 6px;
+        }
+        .skeleton-block::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: shimmer 0.8s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        #skeleton-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 100;
+            transition: opacity 0.4s ease-out;
+        }
+
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+        #main-content { opacity: 0; transform: translateY(10px); transition: 0.4s ease-out; }
+        .loaded #main-content { opacity: 1; transform: translateY(0); }
+
+        .user-badge {
+            background: rgba(0, 82, 255, 0.04);
+            border: 1px solid rgba(0, 82, 255, 0.08);
+        }
+
+        .info-group {
+            border: 1px solid #F1F5F9;
+            border-radius: 24px;
+        }
+
+        .locked-field {
+            background-color: #fafbfc;
+        }
+
+        .disabled-grey {
+            filter: grayscale(1);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative">
+
+    <!-- 1. Skeleton Shimmer -->
+    <div id="skeleton-screen" class="p-6">
+        <div class="w-10 h-10 rounded-full skeleton-block mb-8"></div>
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-24 h-24 rounded-full skeleton-block mb-4"></div>
+            <div class="w-32 h-6 rounded-full skeleton-block mb-2"></div>
+            <div class="w-20 h-3 rounded-full skeleton-block"></div>
+        </div>
+        <div class="space-y-6">
+            <div class="h-32 w-full rounded-3xl skeleton-block"></div>
+            <div class="h-48 w-full rounded-3xl skeleton-block"></div>
+        </div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen pb-20">
+        
+        <header class="px-5 py-6 flex justify-between items-center relative">
+            <a href="home.html" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 active:scale-90 transition-transform">
+                <i class="fa-solid fa-chevron-left text-[14px]"></i>
+            </a>
+            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-1.5 rounded-full user-badge">
+                <span class="text-[13px] font-extrabold text-slate-800 tracking-tight">pranav_d_18</span>
+                <i class="fa-solid fa-circle-check text-blue-600 text-[10px]"></i>
+            </div>
+            <a href="mailto:support@visa.com" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                <i class="fa-solid fa-headset text-[15px]"></i>
+            </a>
+        </header>
+
+        <section class="flex flex-col items-center px-5 mb-8 mt-2">
+            <div class="relative mb-4">
+                <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-blue-200 shadow-xl">
+                    <img src="/IMG_20251214_013513.jpg" class="w-full h-full rounded-full object-cover border-4 border-white">
+                </div>
+                <div class="absolute bottom-0 right-0 w-7 h-7 bg-blue-600 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-shield-halved text-white text-[9px]"></i>
+                </div>
+            </div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Platinum Member</p>
+        </section>
+
+        <div class="px-5 space-y-8">
+            <!-- Group 1: Identity -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-2">Account Identity</h3>
+                <div class="info-group bg-white overflow-hidden">
+                    <div class="p-4 border-b border-slate-50 flex justify-between items-center locked-field">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase">Legal Name</p>
+                            <p class="text-[13px] font-bold text-slate-800">Pranav Dwivedi</p>
+                        </div>
+                        <i class="fa-solid fa-lock text-slate-200 text-[10px]"></i>
+                    </div>
+                    <div class="p-4 border-b border-slate-50 flex justify-between items-center locked-field">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase">Email</p>
+                            <p class="text-[13px] font-bold text-slate-800">hkdy****@gmail.com</p>
+                        </div>
+                        <i class="fa-solid fa-lock text-slate-200 text-[10px]"></i>
+                    </div>
+                    <a href="address.html" class="p-4 flex items-center justify-between active:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-map-location-dot text-sm"></i>
+                            </div>
+                            <span class="text-[13px] font-bold text-slate-800">Residential Address</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-200 text-[10px]"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Group 2: Preferences -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-2">App Configuration</h3>
+                <div class="info-group bg-white overflow-hidden">
+                    <a href="notifications.html" class="p-4 border-b border-slate-50 flex items-center justify-between active:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-9 h-9 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-bell text-sm"></i>
+                            </div>
+                            <span class="text-[13px] font-bold text-slate-800">Notifications</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-200 text-[10px]"></i>
+                    </a>
+                    <a href="security.html" class="p-4 border-b border-slate-50 flex items-center justify-between active:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-9 h-9 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-fingerprint text-sm"></i>
+                            </div>
+                            <span class="text-[13px] font-bold text-slate-800">Security & Biometrics</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-200 text-[10px]"></i>
+                    </a>
+                    <!-- Disabled Settings Button -->
+                    <div class="p-4 flex items-center justify-between disabled-grey">
+                        <div class="flex items-center gap-4">
+                            <div class="w-9 h-9 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-sliders text-sm"></i>
+                            </div>
+                            <span class="text-[13px] font-bold text-slate-800">Global Settings</span>
+                        </div>
+                        <i class="fa-solid fa-lock text-slate-300 text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <div class="pb-10">
+                <a href="index.html" class="info-group bg-white p-4 flex items-center justify-between active:bg-red-50/20 border-red-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-power-off text-[14px]"></i>
+                        </div>
+                        <span class="text-[13px] font-extrabold text-red-500">Sign out session</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-red-200 text-[10px]"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => { document.body.classList.add('loaded'); }, 850); 
+        };
+    </script>
+</body>
+</html>
+

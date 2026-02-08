@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transaction History - Visa Infinite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F4F6F9;
+            color: #1a1b1e;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER --- */
+        .glass-header {
+            position: sticky; top: 0; z-index: 50; padding: 16px 20px;
+            background: rgba(244, 246, 249, 0.95); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* --- LIST --- */
+        .tx-list {
+            flex: 1; padding: 20px;
+        }
+
+        .tx-item {
+            display: flex; align-items: center; gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tx-item:last-child { border-bottom: none; }
+
+        .tx-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
+            background: white; border: 1px solid #f3f4f6;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .tx-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
+
+        .amt-in { color: #16a34a; font-weight: 700; } /* Green for Income */
+        .amt-out { color: #1a1b1e; font-weight: 600; } /* Black for Expense */
+
+        /* --- FOOTER MSG --- */
+        .secure-footer {
+            padding: 40px 20px 60px;
+            text-align: center;
+            background: linear-gradient(to top, #e5e7eb 0%, #F4F6F9 100%);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="glass-header">
+        <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 active:scale-95 transition-transform">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="text-right">
+            <h1 class="text-lg font-bold text-gray-800">Statement</h1>
+            <p class="text-xs text-gray-400 font-mono tracking-wider">VISA ••• 904</p>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="flex gap-2 px-5 mt-4 overflow-x-auto hide-scrollbar">
+        <button class="px-4 py-1.5 bg-black text-white text-xs font-bold rounded-full">All</button>
+        <button class="px-4 py-1.5 bg-white text-gray-600 border border-gray-200 text-xs font-bold rounded-full">Income</button>
+        <button class="px-4 py-1.5 bg-white text-gray-600 border border-gray-200 text-xs font-bold rounded-full">Expense</button>
+        <button class="px-4 py-1.5 bg-white text-gray-600 border border-gray-200 text-xs font-bold rounded-full">Travel</button>
+    </div>
+
+    <!-- LIST -->
+    <div class="tx-list" id="tx-container">
+        <!-- JS Injected -->
+    </div>
+
+    <!-- LEGIT FOOTER -->
+    <div class="secure-footer">
+        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+            <i class="fa-solid fa-shield-halved text-xl"></i>
+        </div>
+        <h3 class="text-sm font-bold text-gray-600 mb-1">End of Loaded History</h3>
+        <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+            Transactions prior to <span class="font-mono text-gray-500">JAN 01 2024</span> are archived. 
+            For full statements, please contact <span class="font-bold text-blue-600">Visa Concierge</span> or visit your nearest branch.
+        </p>
+        <p class="text-[10px] text-gray-300 mt-6 font-mono">ID: V-9928-XA • ENCRYPTED</p>
+    </div>
+
+    <script>
+        const container = document.getElementById('tx-container');
+        
+        // --- DATA POOLS ---
+        const bills = [
+            { name: "Netflix", icon: "fa-solid fa-n text-red-600", amt: -15.49 },
+            { name: "Spotify", icon: "fa-brands fa-spotify text-green-500", amt: -10.99 },
+            { name: "Starbucks", icon: "fa-solid fa-mug-hot text-green-700", amt: [-5.50, -12.20, -8.75] },
+            { name: "Apple Services", icon: "fa-brands fa-apple text-black", amt: -2.99 }
+        ];
+
+        const travel = [
+            { name: "Airbnb San Francisco", amt: -2400.00 },
+            { name: "Indigo 6E-554", amt: -120.00 },
+            { name: "Airbnb New York", amt: -3100.00 },
+            { name: "Indigo 6E-202", amt: -180.00 },
+            { name: "Airbnb London", amt: -1800.00 },
+            { name: "Emirates Airline", amt: -950.00 },
+            { name: "Airbnb Paris", amt: -2100.00 },
+            { name: "Indigo 6E-990", amt: -110.00 },
+            { name: "Hilton Hotels", amt: -450.00 },
+            { name: "Indigo 6E-332", amt: -145.00 },
+            { name: "Airbnb Dubai", amt: -2800.00 },
+            { name: "Delta Airlines", amt: -600.00 }
+        ];
+
+        // Ensure these match the chat file images perfectly
+        const friends = {
+            divyanshi: { name: "Divyanshi", img: "/IMG_20251221_172718.jpg" },
+            mike: { name: "Mike", img: "/IMG_20251213_100449.jpg" },
+            raj: { name: "Raj", img: "/IMG_20251223_010626.jpg" },
+            diivii: { name: "Diivii", img: "/Screenshot_2025-12-21-17-28-39-037_com.instagram.lite-edit.jpg" }
+        };
+
+        // --- GENERATOR ---
+        let transactions = [];
+        const endDate = new Date('2025-06-25'); // Matches end of chats
+
+        function randomDate(startStr, endObj) {
+            const start = new Date(startStr);
+            return new Date(start.getTime() + Math.random() * (endObj.getTime() - start.getTime()));
+        }
+
+        // 1. MIKE (Feb 2024 - June 2025)
+        // High Value Inflows ($15k - $45k)
+        for(let i=0; i<20; i++) {
+            transactions.push({
+                name: "Mike", img: friends.mike.img,
+                amt: Math.floor(Math.random() * (45000 - 15000) + 15000),
+                date: randomDate('2024-02-01', endDate),
+                type: 'in'
+            });
+        }
+
+        // 2. RAJ (Jan 2024 - June 2025)
+        // Medium Value Inflows ($1.5k - $4k)
+        for(let i=0; i<25; i++) {
+            transactions.push({
+                name: "Raj", img: friends.raj.img,
+                amt: Math.floor(Math.random() * (4000 - 1500) + 1500),
+                date: randomDate('2024-01-01', endDate),
+                type: 'in'
+            });
+        }
+
+        // 3. DIVYANSHI (July 2024 - June 2025)
+        // High Volume Outflows (Large & Small)
+        for(let i=0; i<50; i++) {
+            let amt = 0;
+            if(Math.random() > 0.8) amt = Math.floor(Math.random() * (2500 - 800) + 800); // Big payments
+            else amt = Math.floor(Math.random() * (300 - 50) + 50); // Regular payments
+            
+            transactions.push({
+                name: "Divyanshi", img: friends.divyanshi.img,
+                amt: -amt,
+                date: randomDate('2024-07-01', endDate),
+                type: 'out'
+            });
+        }
+
+        // 4. DIIVII (Specific Dates: Sept - Dec 2024)
+        transactions.push({ name: "Diivii", img: friends.diivii.img, amt: -2000, date: new Date('2024-09-15'), type: 'out' });
+        transactions.push({ name: "Diivii", img: friends.diivii.img, amt: -1000, date: new Date('2024-10-20'), type: 'out' });
+        transactions.push({ name: "Diivii", img: friends.diivii.img, amt: -1000, date: new Date('2024-11-10'), type: 'out' });
+
+        // 5. TRAVEL (Jan 2024 - June 2025)
+        travel.forEach(t => {
+            transactions.push({
+                name: t.name, icon: "fa-solid fa-plane text-blue-500",
+                amt: t.amt, date: randomDate('2024-01-01', endDate), type: 'out'
+            });
+        });
+
+        // 6. SPECIAL (June 20, 2025)
+        transactions.push({
+            name: "user-93216@visa", icon: "fa-solid fa-at text-purple-600",
+            amt: 69.69, date: new Date('2025-06-20'), type: 'in'
+        });
+
+        // 7. BILLS (Jan 2024 - June 2025)
+        for(let i=0; i<35; i++) {
+            const bill = bills[Math.floor(Math.random() * bills.length)];
+            let amount = Array.isArray(bill.amt) ? bill.amt[Math.floor(Math.random()*bill.amt.length)] : bill.amt;
+            transactions.push({
+                name: bill.name, icon: bill.icon,
+                amt: amount, date: randomDate('2024-01-01', endDate), type: 'out'
+            });
+        }
+
+        // --- SORT & RENDER ---
+        // Sort descending by date (Newest first)
+        transactions.sort((a, b) => b.date - a.date);
+
+        // Limit to 120 items for performance while keeping it dense
+        const displayTx = transactions.slice(0, 120);
+
+        displayTx.forEach(tx => {
+            const item = document.createElement('div');
+            item.className = 'tx-item';
+            
+            // Icon or Image Logic
+            let visual = '';
+            if(tx.img) {
+                visual = `<div class="tx-icon border-none"><img src="${tx.img}" onerror="this.src='https://ui-avatars.com/api/?name=${tx.name}'"></div>`;
+            } else {
+                visual = `<div class="tx-icon"><i class="${tx.icon}"></i></div>`;
+            }
+
+            // Amount Formatting
+            const isPos = tx.amt > 0;
+            const sign = isPos ? '+' : '';
+            const colorClass = isPos ? 'amt-in' : 'amt-out';
+            const amtStr = sign + "$" + Math.abs(tx.amt).toLocaleString('en-US', {minimumFractionDigits: 2});
+
+            // Date Formatting
+            const dateStr = tx.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            item.innerHTML = `
+                ${visual}
+                <div class="flex-1">
+                    <h4 class="font-bold text-gray-800 text-sm">${tx.name}</h4>
+                    <p class="text-xs text-gray-400">${dateStr} • Completed</p>
+                </div>
+                <div class="${colorClass} text-sm">${amtStr}</div>
+            `;
+            container.appendChild(item);
+        });
+
+    </script>
+</body>
+</html>
+
+

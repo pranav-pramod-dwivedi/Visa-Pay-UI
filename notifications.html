@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --surface: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface);
+            color: #0F172A;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SKELETON --- */
+        .skeleton-block { background: #f1f5f9; position: relative; overflow: hidden; border-radius: 8px; }
+        .skeleton-block::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: shimmer 0.8s infinite linear; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        #skeleton-screen { position: fixed; inset: 0; background: white; z-index: 2000; transition: opacity 0.5s ease; padding: 24px; }
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+
+        /* --- FLOATING BELL ANIMATION --- */
+        @keyframes bellFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(5deg); }
+            75% { transform: translateY(-5px) rotate(-5deg); }
+        }
+        
+        .animated-bell {
+            animation: bellFloat 3s ease-in-out infinite;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative bg-white">
+
+    <!-- 1. Skeleton Screen -->
+    <div id="skeleton-screen">
+        <div class="w-10 h-10 rounded-full skeleton-block mb-10"></div>
+        <div class="h-8 w-48 skeleton-block mb-20"></div>
+        <div class="flex flex-col items-center">
+            <div class="w-32 h-32 rounded-full skeleton-block mb-6"></div>
+            <div class="w-56 h-6 rounded-full skeleton-block mb-2"></div>
+            <div class="w-40 h-4 rounded-full skeleton-block"></div>
+        </div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen flex flex-col pb-20">
+        
+        <!-- Header -->
+        <header class="px-6 py-6 flex justify-between items-center sticky top-0 bg-white/95 backdrop-blur-md z-50">
+            <a href="profile.html" class="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 active:scale-90 transition-all">
+                <i class="fa-solid fa-chevron-left text-[15px] text-slate-900"></i>
+            </a>
+            <h1 class="text-[13px] font-extrabold text-slate-900 tracking-[0.1em] uppercase">Inbox</h1>
+            <div class="w-11"></div>
+        </header>
+
+        <!-- Empty State Container -->
+        <div class="flex-1 flex flex-col items-center justify-center px-10 text-center pb-20 mt-[-40px]">
+            <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-8 animated-bell border border-slate-100">
+                <i class="fa-solid fa-bell-slash text-slate-300 text-4xl"></i>
+            </div>
+            <h2 class="text-lg font-extrabold text-slate-900 mb-2">Nothing to see here</h2>
+            <p class="text-[13px] text-slate-400 font-medium leading-relaxed max-w-[250px]">
+                We'll let you know when something important happens with your account or payments.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => { document.body.classList.add('loaded'); }, 850); 
+        };
+    </script>
+</body>
+</html>
+
+

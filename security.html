@@ -1,0 +1,452 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Secure Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,400;1,600&family=Montserrat:wght@600;700&family=JetBrains+Mono:wght@500&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --surface: #F8FAFC;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FFFFFF;
+            color: #0F172A;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body.lock-scroll { overflow: hidden; }
+
+        /* --- SKELETON --- */
+        .skeleton-block { background: #f1f5f9; position: relative; overflow: hidden; border-radius: 12px; }
+        .skeleton-block::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: shimmer 0.8s infinite linear; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        #skeleton-screen { position: fixed; inset: 0; background: white; z-index: 2000; transition: opacity 0.5s ease; padding: 24px; }
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+
+        /* --- DASHBOARD --- */
+        .glass-card {
+            background: #FFFFFF;
+            border: 1px solid #F1F5F9;
+            border-radius: 32px;
+            box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* SCANNER */
+        .scanner-container { position: absolute; inset: 0; overflow: hidden; border-radius: 32px; pointer-events: none; }
+        .scanner-beam {
+            height: 4px;
+            width: 100%;
+            background: #0052FF;
+            position: absolute;
+            top: -10px;
+            left: 0;
+            filter: drop-shadow(0 0 8px #0052FF);
+            animation: realisticScan 3.5s infinite ease-in-out;
+            opacity: 0.6;
+        }
+        @keyframes realisticScan { 
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* --- LOCKDOWN --- */
+        #lockdown-overlay {
+            position: fixed; inset: 0; z-index: 1000; background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(40px); display: none; flex-direction: column; align-items: center; justify-content: center;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #lockdown-overlay.active { display: flex; }
+
+        .key-btn {
+            width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700; background: white; border: 1px solid #f1f5f9; transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .key-btn:active { transform: scale(0.85); background: var(--visa-blue); color: white; }
+        .pass-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #e2e8f0; transition: 0.3s; }
+        .pass-dot.filled { background: var(--visa-blue); transform: scale(1.3); box-shadow: 0 0 15px rgba(0, 82, 255, 0.4); }
+
+        /* --- CINEMATIC 0511 (The Cosmic Ocean) --- */
+        #cinematic-0511 {
+            position: fixed; inset: 0; z-index: 1500; background: #020617; /* Deep Navy */
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s ease;
+        }
+        #cinematic-0511.active { opacity: 1; pointer-events: auto; }
+
+        /* Stage Layout */
+        .content-wrapper {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; width: 100%;
+        }
+
+        #visual-stage {
+            width: 300px; height: 300px; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            margin-bottom: 40px;
+        }
+
+        #text-stage {
+            height: 80px; width: 90%; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* SVG Animation */
+        .story-svg path, .story-svg circle, .story-svg line {
+            stroke-dasharray: 1000; stroke-dashoffset: 1000;
+            animation: drawLine 3s forwards ease-in-out;
+        }
+        .story-svg.filled path, .story-svg.filled circle { fill-opacity: 0; animation: fillIn 2s forwards 1s; }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
+        @keyframes fillIn { to { fill-opacity: 1; } }
+
+        .bindi-glow { animation: bindiPulse 2s infinite alternate; }
+        @keyframes bindiPulse { from { box-shadow: 0 0 5px red; } to { box-shadow: 0 0 15px red; } }
+
+        /* Typography */
+        .story-text {
+            font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.2rem; color: #cbd5e1;
+            opacity: 0; transform: translateY(20px); filter: blur(10px);
+            transition: all 1.5s ease;
+        }
+        .story-text.active { opacity: 1; transform: translateY(0); filter: blur(0); }
+        
+        .moon-text {
+            color: #fff; font-weight: 700; text-shadow: 0 0 30px #ffffff;
+        }
+
+        /* Final Name */
+        #final-name {
+            font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 3rem; color: #fff;
+            opacity: 0; text-shadow: 0 0 20px #60a5fa; transition: opacity 2s ease;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E2E8F0; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--visa-blue); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative bg-white">
+
+    <!-- 1. Skeleton -->
+    <div id="skeleton-screen">
+        <div class="w-10 h-10 rounded-full skeleton-block mb-10"></div>
+        <div class="h-56 w-full rounded-[2.5rem] skeleton-block mb-10"></div>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="h-32 rounded-3xl skeleton-block"></div>
+            <div class="h-32 rounded-3xl skeleton-block"></div>
+        </div>
+        <div class="h-40 w-full rounded-3xl skeleton-block"></div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen pb-40">
+        <header class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur-md z-50">
+            <a href="profile.html" class="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 active:scale-90 transition-all">
+                <i class="fa-solid fa-chevron-left text-[15px] text-slate-900"></i>
+            </a>
+            <h1 class="text-[13px] font-extrabold text-slate-900 tracking-[0.1em] uppercase">Vault Security</h1>
+            <div class="w-11"></div>
+        </header>
+
+        <div class="px-6 space-y-8 mt-4">
+            
+            <!-- PRIORITY OPTION -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-extrabold text-red-500 uppercase tracking-widest px-2 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> Critical Task
+                </h3>
+                <a href="wipe.html" class="block relative overflow-hidden group shadow-lg shadow-red-100/50">
+                    <div class="absolute inset-0 bg-gradient-to-r from-red-600 to-red-500 rounded-[2.5rem]"></div>
+                    <div class="relative p-7 flex items-center justify-between z-10">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/20">
+                                <i class="fa-solid fa-radiation text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-[15px] font-black text-white uppercase tracking-tight">Protocol Zero</p>
+                                <p class="text-[10px] text-white/70 font-bold uppercase tracking-widest">Authorize System Wipe</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-white/40"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- SECURITY DASHBOARD -->
+            <div class="space-y-4">
+                <div class="glass-card p-8 relative overflow-hidden">
+                    <div class="scanner-container"><div class="scanner-beam"></div></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest">Integrity State</p>
+                            <h2 class="text-3xl font-black text-slate-900 tracking-tight">Encrypted</h2>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-shield-halved text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex gap-3 relative z-10">
+                        <div class="flex-1 bg-slate-50/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-100">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Entropy Rate</p>
+                            <p class="text-xl font-black text-slate-800">99.99<span class="text-xs text-blue-500">%</span></p>
+                        </div>
+                        <div class="flex-1 bg-slate-50/80 backdrop-blur-sm rounded-2xl p-4 border border-slate-100">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">System Uptime</p>
+                            <p class="text-xl font-black text-slate-800">100.0<span class="text-xs text-blue-500">%</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- METRICS GRID -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card p-5 space-y-4 overflow-hidden">
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-dna text-lg"></i></div>
+                    <div class="overflow-hidden">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Neural Sync</p>
+                        <p class="text-[13px] font-bold text-slate-900 tracking-tight">Standardized</p>
+                    </div>
+                </div>
+                <div class="glass-card p-5 space-y-4 overflow-hidden">
+                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="fa-solid fa-signal text-lg"></i></div>
+                    <div class="overflow-hidden">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Threat Level</p>
+                        <p class="text-[13px] font-bold text-slate-900 tracking-tight">Negligible</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group: Access Management -->
+            <div class="space-y-4">
+                <h3 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-2">Access Management</h3>
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
+                    <div onclick="openPasscode('Neural Face ID')" class="p-5 border-b border-slate-50 flex items-center justify-between cursor-pointer active:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 8s-1.5 2-4 2-4-2-4-2"/><path d="M12 14v.01"/><path d="M9 14h.01"/><path d="M15 14h.01"/></svg>
+                            </div>
+                            <div><p class="text-[14px] font-bold text-slate-800">Neural Face ID</p><p class="text-[9px] text-slate-400 font-bold uppercase">Primary Auth</p></div>
+                        </div>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                    <div onclick="openPasscode('Biometrics')" class="p-5 border-b border-slate-50 flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 bg-slate-50 rounded-xl flex items-center justify-center text-slate-900"><i class="fa-solid fa-fingerprint text-lg"></i></div>
+                            <span class="text-[14px] font-bold text-slate-800">Fingerprint Registry</span>
+                        </div>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                    <div onclick="openPasscode('Passcode')" class="p-5 flex items-center justify-between active:bg-slate-50 cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400"><i class="fa-solid fa-key"></i></div>
+                            <span class="text-[14px] font-bold text-slate-800">Master Passcode</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-200"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-10 pb-20 text-center"><p class="text-[10px] font-extrabold text-slate-300 uppercase tracking-[0.5em]">Vault Instance: NV-X420</p></div>
+        </div>
+    </div>
+
+    <!-- LOCKDOWN OVERLAY -->
+    <div id="lockdown-overlay">
+        <div class="flex flex-col items-center">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-blue-100">
+                <i class="fa-solid fa-shield-keyhole text-3xl"></i>
+            </div>
+            <h2 id="lockdown-title" class="text-xl font-black text-slate-900 mb-2">Vault Access</h2>
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-12">Level 5 Authorization</p>
+            <div class="flex gap-6 mb-16">
+                <div class="pass-dot"></div><div class="pass-dot"></div><div class="pass-dot"></div><div class="pass-dot"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-8 w-full max-w-[280px] mb-12">
+                <button onclick="keyIn('1')" class="key-btn">1</button><button onclick="keyIn('2')" class="key-btn">2</button><button onclick="keyIn('3')" class="key-btn">3</button>
+                <button onclick="keyIn('4')" class="key-btn">4</button><button onclick="keyIn('5')" class="key-btn">5</button><button onclick="keyIn('6')" class="key-btn">6</button>
+                <button onclick="keyIn('7')" class="key-btn">7</button><button onclick="keyIn('8')" class="key-btn">8</button><button onclick="keyIn('9')" class="key-btn">9</button>
+                <div></div><button onclick="keyIn('0')" class="key-btn">0</button><button onclick="backIn()" class="key-btn text-slate-300 border-none bg-transparent"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+            <button onclick="exitPasscode()" class="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Abort</button>
+        </div>
+    </div>
+
+    <!-- CINEMATIC 0511 (STORYTELLING MODE) -->
+    <div id="cinematic-0511">
+        <div class="content-wrapper">
+            <!-- VISUAL STAGE (Center) -->
+            <div id="visual-stage">
+                <!-- Scene 1: Eyes & Bindi -->
+                <svg id="scene-eyes" class="story-svg hidden absolute" width="300" height="200" viewBox="0 0 300 200">
+                    <path d="M70 100 Q100 70 130 100 Q100 130 70 100" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+                    <circle cx="100" cy="100" r="8" fill="#e2e8f0"/>
+                    <path d="M170 100 Q200 70 230 100 Q200 130 170 100" fill="none" stroke="#e2e8f0" stroke-width="2"/>
+                    <circle cx="200" cy="100" r="8" fill="#e2e8f0"/>
+                    <circle class="bindi-glow" cx="150" cy="60" r="3" fill="#ef4444"/>
+                </svg>
+
+                <!-- Scene 2: Hair Waves -->
+                <svg id="scene-hair" class="story-svg hidden absolute" width="300" height="200" viewBox="0 0 300 200">
+                    <path d="M50 50 Q100 150 50 250" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="0.6"/>
+                    <path d="M100 50 Q150 150 100 250" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="0.8"/>
+                    <path d="M150 50 Q200 150 150 250" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="1"/>
+                    <path d="M200 50 Q250 150 200 250" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="0.8"/>
+                    <path d="M250 50 Q300 150 250 250" fill="none" stroke="#94a3b8" stroke-width="1.5" opacity="0.6"/>
+                </svg>
+
+                <!-- Scene 3: Moon -->
+                <svg id="scene-moon" class="story-svg hidden absolute" width="300" height="200" viewBox="0 0 300 200">
+                    <circle cx="150" cy="100" r="50" fill="#fff" style="filter: drop-shadow(0 0 30px white);"/>
+                </svg>
+
+                <!-- FINALE: diivii -->
+                <h1 id="final-name" class="hidden">diivii</h1>
+            </div>
+
+            <!-- TEXT STAGE (Below) -->
+            <div id="text-stage"></div>
+        </div>
+    </div>
+
+    <!-- EASTER EGG LAYER -->
+    <div id="egg-layer" class="fixed inset-0 z-[1500] bg-black/50 backdrop-blur-2xl flex flex-col items-center justify-center hidden p-8">
+        <div id="egg-content" class="bg-white p-12 rounded-[4rem] shadow-2xl text-center scale-90 transition-all duration-700 flex flex-col items-center"></div>
+    </div>
+
+   
+  
+  <script>
+        let pin = "";
+        window.onload = () => { setTimeout(() => document.body.classList.add('loaded'), 850); };
+
+        function openPasscode(t) {
+            const o = document.getElementById('lockdown-overlay');
+            document.getElementById('lockdown-title').innerText = t;
+            document.body.classList.add('lock-scroll');
+            o.style.display = 'flex';
+            setTimeout(() => o.classList.add('active'), 10);
+        }
+
+        function exitPasscode() {
+            const o = document.getElementById('lockdown-overlay');
+            o.classList.remove('active');
+            document.body.classList.remove('lock-scroll');
+            setTimeout(() => { o.style.display = 'none'; pin = ""; updateDots(); }, 500);
+        }
+
+        function keyIn(d) {
+            if (pin.length < 4) { pin += d; updateDots(); if (pin.length === 4) setTimeout(validate, 300); }
+        }
+        function backIn() { pin = pin.slice(0, -1); updateDots(); }
+        function updateDots() {
+            const ds = document.querySelectorAll('.pass-dot');
+            ds.forEach((d, i) => i < pin.length ? d.classList.add('filled') : d.classList.remove('filled'));
+        }
+
+        function validate() {
+            const code = pin;
+            if (code === "0511") start0511();
+            else if (code === "1818") showEliteEgg('<i class="fa-solid fa-crown text-yellow-500 text-6xl mb-4"></i><h1 class="text-3xl font-black text-slate-900">KING KOHLI</h1>');
+            else {
+                const overlay = document.getElementById('lockdown-overlay');
+                overlay.style.animation = "shake 0.4s";
+                setTimeout(() => { overlay.style.animation = ""; pin = ""; updateDots(); }, 400);
+            }
+        }
+
+        function showEliteEgg(html) {
+            const layer = document.getElementById('egg-layer');
+            const content = document.getElementById('egg-content');
+            content.innerHTML = html;
+            layer.classList.remove('hidden');
+            exitPasscode();
+            setTimeout(() => content.classList.add('scale-100'), 10);
+            setTimeout(() => { 
+                content.classList.remove('scale-100');
+                setTimeout(() => { layer.classList.add('hidden'); pin = ""; updateDots(); }, 400);
+            }, 3000);
+        }
+
+        /* --- 0511 STORYTELLING LOGIC --- */
+        function start0511() {
+            const layer = document.getElementById('cinematic-0511');
+            exitPasscode();
+            layer.classList.add('active');
+            document.body.classList.add('lock-scroll');
+            
+            const storyboard = [
+                { text: "Log baste h samandar se lekin", svg: "scene-eyes", duration: 4000 },
+                { text: "Ham tumhari aankhon me dubne ko taiyar h", svg: "scene-eyes", duration: 4000 },
+                { text: "Kisko dekhne ki chahat kare...", svg: "scene-eyes", duration: 3000 },
+                { text: "Tumhe dekh liya h ek baar", svg: "scene-eyes", duration: 4000 },
+                { text: "Tumhari zulfo ki gehrai h bohot aur", svg: "scene-hair", duration: 4000 },
+                { text: "Hamko pasand nhi aata h kinara", svg: "scene-hair", duration: 4000 },
+                { text: "Log kehte h chaand ka tukda h tu", svg: "scene-moon", duration: 4000 },
+                { text: "Par ham kehte h...", svg: "scene-moon", duration: 2500 },
+                { text: "Chaand tukda h tumhara", svg: "scene-moon", duration: 5000, highlight: true }
+            ];
+
+            let currentTime = 1000;
+            const textStage = document.getElementById('text-stage');
+            const svgs = ['scene-eyes', 'scene-hair', 'scene-moon'];
+
+            storyboard.forEach((scene, index) => {
+                setTimeout(() => {
+                    const extraClass = scene.highlight ? " moon-text" : "";
+                    textStage.innerHTML = `<p class="story-text active${extraClass}">${scene.text}</p>`;
+                    
+                    svgs.forEach(id => document.getElementById(id).classList.add('hidden'));
+                    const currentSvg = document.getElementById(scene.svg);
+                    if(currentSvg) {
+                        currentSvg.classList.remove('hidden');
+                        currentSvg.style.animation = 'none';
+                        currentSvg.offsetHeight; 
+                        currentSvg.style.animation = null; 
+                    }
+                }, currentTime);
+                currentTime += scene.duration;
+            });
+
+            // FINALE: Moon fades to diivii
+            setTimeout(() => {
+                textStage.innerHTML = '';
+                const moon = document.getElementById('scene-moon');
+                moon.style.transition = "opacity 1.5s ease";
+                moon.style.opacity = "0";
+                
+                setTimeout(() => {
+                    moon.classList.add('hidden'); // Fully remove moon
+                    const final = document.getElementById('final-name');
+                    final.classList.remove('hidden');
+                    // Force reflow for transition
+                    void final.offsetWidth; 
+                    final.style.opacity = '1';
+                }, 1500);
+            }, currentTime);
+
+            setTimeout(() => location.reload(), currentTime + 7000);
+        }
+    </script>
+    <style>
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-15px); } 80% { transform: translateX(15px); } }
+    </style>
+</body>
+</html>

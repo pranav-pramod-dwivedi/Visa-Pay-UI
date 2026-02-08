@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visa AI Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            margin: 0;
+            padding-bottom: 120px;
+            overflow-x: hidden;
+        }
+
+        /* --- GRAPH --- */
+        .chart-container {
+            position: relative; height: 280px; width: 100%; margin-top: 20px; overflow: hidden;
+        }
+        .chart-svg {
+            width: 120%; height: 100%; margin-left: -10%; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+        }
+        .chart-line {
+            fill: none; stroke: #3b82f6; stroke-width: 3; stroke-linecap: round;
+            stroke-dasharray: 2000; stroke-dashoffset: 2000;
+            animation: drawLine 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .chart-fill {
+            fill: url(#gradientBlue); opacity: 0;
+            animation: fadeIn 1.5s ease-out 1s forwards;
+        }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
+        @keyframes fadeIn { to { opacity: 0.4; } }
+
+        /* --- WRAPPED CARDS --- */
+        .wrapped-scroll {
+            display: flex; gap: 16px; overflow-x: auto; padding: 10px 24px 30px;
+            scroll-snap-type: x mandatory;
+        }
+        .wrapped-card {
+            min-width: 260px; height: 320px; border-radius: 32px;
+            scroll-snap-align: center; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.2s;
+        }
+        .wrapped-card:active { transform: scale(0.98); }
+        
+        .wc-1 { background: linear-gradient(135deg, #FF0080, #7928CA); }
+        .wc-2 { background: linear-gradient(135deg, #007CF0, #00DFD8); }
+        .wc-3 { background: linear-gradient(135deg, #FF4D4D, #F9CB28); }
+        .wc-4 { background: linear-gradient(135deg, #434343, #000000); }
+
+        .big-stat { font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 700; line-height: 1; }
+
+        /* --- INSIGHT WIDGETS --- */
+        .widget-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 24px 24px;
+        }
+        .stat-widget {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 16px;
+            display: flex; flex-direction: column; justify-content: space-between; height: 140px;
+        }
+
+        /* --- NAV --- */
+        .watch-strap {
+            height: 54px; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .watch-case {
+            width: 68px; height: 68px; background: linear-gradient(135deg, #0052FF 0%, #002D8F 100%);
+            box-shadow: 0 12px 30px rgba(0, 82, 255, 0.35); border: 4px solid #0f172a;
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* --- GHOST LOADER --- */
+        #ghost-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background-color: #F8FAFC; padding: 24px;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .loaded #ghost-overlay { opacity: 0; visibility: hidden; pointer-events: none; }
+        .ghost-block { background: #e2e8f0; border-radius: 16px; position: relative; overflow: hidden; }
+        .ghost-block::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- GHOST LOADER -->
+    <div id="ghost-overlay">
+        <div class="flex justify-between items-center"><div class="ghost-block w-32 h-8"></div><div class="ghost-block w-10 h-10 rounded-full"></div></div>
+        <div class="ghost-block w-full h-[280px] rounded-b-3xl -mx-6 w-[115%]"></div>
+        <div class="flex justify-between mt-4"><div class="ghost-block w-40 h-6"></div><div class="ghost-block w-16 h-4"></div></div>
+        <div class="flex gap-4 overflow-hidden"><div class="ghost-block w-[260px] h-[320px] rounded-[32px] shrink-0"></div><div class="ghost-block w-[100px] h-[320px] rounded-l-[32px] shrink-0"></div></div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="p-6 flex justify-between items-center">
+        <div>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Financial Pulse</p>
+            <h1 class="text-2xl font-bold text-white">Dec 2025</h1>
+        </div>
+        <!-- LINKED AI BOT -->
+        <a href="unavailable.html" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 active:scale-95 transition-transform">
+            <i class="fa-solid fa-robot text-blue-400"></i>
+        </a>
+    </div>
+
+    <!-- GRAPH SECTION -->
+    <div class="relative">
+        <div class="chart-container">
+            <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="gradientBlue" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.5" />
+                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                    </linearGradient>
+                </defs>
+                <path class="chart-fill" d="M0,150 C40,100 60,180 100,80 C140,-20 180,120 220,60 C250,20 270,100 280,190 L400,190 L400,200 L0,200 Z" />
+                <path class="chart-line" d="M0,150 C40,100 60,180 100,80 C140,-20 180,120 220,60 C250,20 270,100 280,190 L400,190" />
+                
+                <!-- Fixed Red Dot -->
+                <circle cx="280" cy="190" r="4" fill="#ef4444" />
+                <text x="295" y="193" fill="#64748b" font-size="10" font-family="Space Grotesk" font-weight="bold"></text>
+            </svg>
+        </div>
+        <div class="absolute bottom-2 left-6 text-[10px] font-bold text-slate-400">JAN</div>
+        <div class="absolute bottom-2 right-6 text-[10px] font-bold text-slate-600">DEC</div>
+    </div>
+
+    <!-- SECTION TITLE -->
+    <div class="px-6 mb-4 flex justify-between items-end">
+        <h3 class="text-lg font-bold text-white">Financial Rewind</h3>
+        <span class="text-xs text-slate-400">2023 - 2025</span>
+    </div>
+
+    <!-- WRAPPED SCROLL -->
+    <div class="wrapped-scroll hide-scrollbar">
+        
+        <!-- Card 1 -->
+        <div class="wrapped-card wc-1">
+            <div>
+                <div class="bg-black/20 w-fit px-3 py-1 rounded-full text-[10px] font-bold text-white mb-2">2025 WRAPPED</div>
+                <h2 class="text-2xl font-bold text-white">Net Positive.</h2>
+            </div>
+            <div>
+                <p class="text-white/80 text-sm font-medium mb-1">Net Cashflow</p>
+                <p class="big-stat text-white">+$370k</p>
+                <p class="text-white/60 text-xs mt-2">Saved 86% of income.</p>
+            </div>
+        </div>
+
+        <!-- Card 2: Top Connection -->
+        <div class="wrapped-card wc-2">
+            <div>
+                <div class="bg-black/20 w-fit px-3 py-1 rounded-full text-[10px] font-bold text-white mb-2">TOP CONNECTION</div>
+                <h2 class="text-2xl font-bold text-white">Mike</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <img src="/IMG_20251213_100449.jpg" class="w-16 h-16 rounded-full border-4 border-white/20 object-cover shrink-0">
+                <div>
+                    <p class="text-3xl font-bold text-white">98%</p>
+                    <p class="text-white/80 text-xs">of your income source.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Risk Alert -->
+        <div class="wrapped-card wc-3">
+            <div>
+                <div class="bg-black/20 w-fit px-3 py-1 rounded-full text-[10px] font-bold text-white mb-2">RISK DETECTED</div>
+                <h2 class="text-2xl font-bold text-white">Drain.</h2>
+            </div>
+            <div>
+                <p class="text-white/90 text-sm font-bold mb-2">You sent $19k to:</p>
+                <div class="flex -space-x-3 mb-4">
+                    <img src="/IMG_20251221_172718.jpg" class="w-10 h-10 rounded-full border-2 border-white object-cover shrink-0">
+                    <img src="/Screenshot_2025-12-21-17-28-39-037_com.instagram.lite-edit.jpg" class="w-10 h-10 rounded-full border-2 border-white object-cover shrink-0">
+                </div>
+                <p class="text-white/60 text-xs">Divyanshi & Diivii accounted for most discretionary spend.</p>
+            </div>
+        </div>
+
+        <!-- Card 4: Archive -->
+        <div class="wrapped-card wc-4">
+            <div>
+                <div class="bg-white/20 w-fit px-3 py-1 rounded-full text-[10px] font-bold text-white mb-2">ARCHIVED</div>
+                <h2 class="text-2xl font-bold text-white">2023 Legacy</h2>
+            </div>
+            <div>
+                <p class="text-white/80 text-sm font-medium mb-1">Total Volume</p>
+                <p class="big-stat text-white">$120k</p>
+                <p class="text-white/60 text-xs mt-2">Growth vs 2025: +310%</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- INSIGHTS GRID -->
+    <div class="px-6 mb-2"><h3 class="text-lg font-bold text-white">Deep Analytics</h3></div>
+    <div class="widget-grid">
+        
+        <!-- Net Worth -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-wallet"></i>
+                <span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-bold">Top 0.1%</span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Current Net Worth</p>
+                <p class="text-xl font-bold text-white">₹4.305Cr</p>
+                <p class="text-[9px] text-slate-500">Higher than 99.9% of users</p>
+            </div>
+        </div>
+
+        <!-- Inflation Hit -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-arrow-trend-down text-red-500"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Inflation Hit</p>
+                <p class="text-xl font-bold text-white">-$1,240</p>
+                <p class="text-[9px] text-slate-500">Purchasing power lost</p>
+            </div>
+        </div>
+
+        <!-- Financial Runway -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-hourglass-half"></i>
+                <span class="text-[10px] text-cyan-400 border border-cyan-400/30 px-1.5 rounded font-bold">Safe</span>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Cash Runway</p>
+                <p class="text-xl font-bold text-white">3.2 Years</p>
+                <p class="text-[9px] text-slate-500">If income stops today</p>
+            </div>
+        </div>
+
+        <!-- Weekend Vibe -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-champagne-glasses text-purple-400"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Weekend Vibe</p>
+                <p class="text-xl font-bold text-white">High</p>
+                <p class="text-[9px] text-slate-500">65% of spend Sat-Sun</p>
+            </div>
+        </div>
+
+        <!-- Eat-Out Ratio -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-utensils text-orange-400"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Dining Out</p>
+                <div class="flex items-end gap-1">
+                    <p class="text-xl font-bold text-white">88%</p>
+                    <p class="text-[9px] text-slate-500 mb-1">vs Groceries</p>
+                </div>
+                <div class="w-full bg-slate-700 h-1 mt-1 rounded-full"><div class="bg-orange-500 h-full w-[88%]"></div></div>
+            </div>
+        </div>
+
+        <!-- Safety Net -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-shield-heart text-green-500"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Safety Net</p>
+                <p class="text-xl font-bold text-white">6 Mo+</p>
+                <p class="text-[9px] text-slate-500">Emergency fund full</p>
+            </div>
+        </div>
+
+        <!-- Ghost Subs -->
+        <div class="stat-widget" onclick="window.location.href='unavailable.html'">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-trash-can text-red-400"></i>
+                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Ghost Subs</p>
+                <p class="text-xl font-bold text-white">$42<span class="text-xs text-slate-500 font-normal">/mo</span></p>
+                <p class="text-[9px] text-slate-500">Detected unused apps</p>
+            </div>
+        </div>
+
+        <!-- AI Prediction -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-car text-blue-400"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">AI Prediction</p>
+                <p class="text-xl font-bold text-white">Vehicle</p>
+                <p class="text-[9px] text-slate-500">Saving pattern match</p>
+            </div>
+        </div>
+
+        <!-- Credit Score -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-gauge-high"></i>
+                <i class="fa-solid fa-arrow-down text-red-500 text-sm"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Credit Score</p>
+                <p class="text-2xl font-bold text-white">680 <span class="text-sm font-normal text-red-500">-42</span></p>
+            </div>
+        </div>
+
+        <!-- Digital Spend -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Digital Spend</p>
+                <div class="flex items-end gap-1">
+                    <p class="text-xl font-bold text-white">94%</p>
+                    <p class="text-[9px] text-purple-400 mb-1">Apple Pay</p>
+                </div>
+                <div class="w-full bg-slate-700 h-1 mt-1 rounded-full"><div class="bg-purple-500 h-full w-[94%]"></div></div>
+            </div>
+        </div>
+
+        <!-- Night Owl -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-champagne-glasses text-xs text-pink-400"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Night Owl</p>
+                <p class="text-xl font-bold text-white">$4.2k</p>
+                <p class="text-[9px] text-slate-500">Spent after 10:00 PM</p>
+            </div>
+        </div>
+
+        <!-- Caffeine Index -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Caffeine Index</p>
+                <p class="text-xl font-bold text-white">$840<span class="text-xs text-slate-500 font-normal">/yr</span></p>
+                <p class="text-[9px] text-orange-400">Top 1% of users</p>
+            </div>
+        </div>
+
+        <!-- Carbon -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-leaf"></i>
+                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Carbon Footprint</p>
+                <p class="text-xl font-bold text-white">High <span class="text-xs text-slate-500 font-normal">/ 12 Flights</span></p>
+            </div>
+        </div>
+
+        <!-- Tax -->
+        <div class="stat-widget">
+            <div class="flex justify-between text-slate-400 text-xl">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-400">Tax Estimate</p>
+                <p class="text-xl font-bold text-white">$28,400</p>
+                <p class="text-[9px] text-slate-500">Based on 430k inflow</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div class="px-6 mb-24">
+        <div class="bg-gradient-to-r from-indigo-900 to-blue-900 rounded-2xl p-5 border border-white/10 flex items-center gap-4 cursor-pointer" onclick="window.location.href='https://usa.visa.com/pay-with-visa/featured-offers.html'">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-white text-sm">Portfolio Vacuum</h4>
+                <p class="text-xs text-indigo-200">You have $0.00 invested. Inflation is eating your cash.</p>
+            </div>
+            <i class="fa-solid fa-chevron-right text-white/50 text-sm ml-auto"></i>
+        </div>
+    </div>
+
+    <!-- NAV BAR -->
+    <div id="floating-nav" class="fixed bottom-6 left-6 right-6 max-w-[calc(100%-48px)] mx-auto z-50">
+        <div class="relative flex items-center">
+            <nav class="watch-strap w-full rounded-full px-6 flex justify-between items-center">
+                <div class="flex gap-10">
+                    <a href="home.html" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition-colors"><i class="fa-solid fa-house-chimney text-[18px]"></i><span class="text-[9px] font-bold">Home</span></a>
+                    <a href="cards.html" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition-colors"><i class="fa-solid fa-credit-card text-[18px]"></i><span class="text-[9px] font-bold">Cards</span></a>
+                </div>
+                <div class="flex gap-10">
+                    <a href="stats.html" class="flex flex-col items-center gap-0.5 text-blue-500"><i class="fa-solid fa-chart-line text-[18px]"></i><span class="text-[9px] font-bold">Stats</span></a>
+                    <a href="user.html" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white transition-colors"><i class="fa-solid fa-user-circle text-[18px]"></i><span class="text-[9px] font-bold">User</span></a>
+                </div>
+            </nav>
+            <a href="pay.html" class="watch-case rounded-full flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform"><i class="fa-solid fa-qrcode text-[26px]"></i></a>
+        </div>
+    </div>
+
+    <script>
+        // Trigger Ghost Fade Out
+        window.onload = function() {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 1500); // 1.5s Ghost Load
+        };
+    </script>
+
+</body>
+</html>
+
+

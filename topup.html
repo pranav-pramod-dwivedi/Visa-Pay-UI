@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bank of America | Secure Transfer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+            color: #1e1e1e;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .boa-header {
+            background: linear-gradient(90deg, #E31837 0%, #B9122B 100%);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0061A9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .secure-badge {
+            background: #E8F5E9;
+            color: #2E7D32;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .main-card {
+            background: white;
+            margin: 40px 20px;
+            padding: 30px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Error Specifics */
+        .error-icon-box {
+            width: 64px; height: 64px;
+            background: #FEF2F2;
+            color: #DC2626;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-return {
+            background: #0061A9;
+            color: white;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 6px;
+            margin-top: 24px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .btn-return:active { background: #004d8a; }
+
+    </style>
+</head>
+<body>
+
+    <!-- BoA Header -->
+    <div class="boa-header">
+        <div class="flex items-center gap-2">
+            <!-- Simplified Logo Representation -->
+            <div class="grid grid-cols-2 gap-0.5 w-6 h-6">
+                <div class="bg-white h-2.5 w-2.5"></div>
+                <div class="bg-white h-2.5 w-2.5"></div>
+                <div class="bg-white h-2.5 w-2.5"></div>
+                <div class="bg-white h-2.5 w-2.5"></div>
+            </div>
+            <span class="font-bold tracking-tight text-lg">Bank of America</span>
+        </div>
+        <div class="text-[10px] opacity-80 font-mono">SECURE</div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-card">
+        
+        <!-- View 1: Loading (Visible initially) -->
+        <div id="view-loading" class="w-full">
+            <div class="loader"></div>
+            <h2 class="text-lg font-bold text-gray-800 mb-2">Verifying Credentials</h2>
+            <p class="text-xs text-gray-500">Connecting to secure gateway...</p>
+            <div class="mt-8 border-t border-gray-100 pt-4">
+                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>Merchant</span>
+                    <span>Visa Infinite</span>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400">
+                    <span>Account</span>
+                    <span>Checking •••• 8890</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Frozen Error (Hidden initially) -->
+        <div id="view-error" class="hidden flex-col items-center">
+            <div class="error-icon-box">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            
+            <h1 class="text-xl font-bold text-gray-900 mb-3">Account Frozen</h1>
+            
+            <div class="bg-red-50 border border-red-100 p-4 rounded-lg mb-6 w-full text-left">
+                <div class="flex gap-3">
+                    <i class="fa-solid fa-circle-exclamation text-red-600 mt-0.5 text-sm"></i>
+                    <div>
+                        <p class="text-sm font-bold text-red-800 mb-1">Access Denied</p>
+                        <p class="text-xs text-red-700 leading-relaxed">
+                            We are unable to process this request. Your account has been temporarily frozen due to suspicious activity detected on <strong>June 23, 2025</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full bg-gray-50 p-3 rounded border border-gray-200 text-left mb-6">
+                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Reference ID</p>
+                <p class="text-sm font-mono text-gray-700">ERR-FZN-99201-X</p>
+            </div>
+
+            <p class="text-xs text-gray-500 mb-2">Please contact the Fraud Department immediately.</p>
+            <p class="text-sm font-bold text-blue-700">1-800-432-1000</p>
+
+            <button onclick="window.location.href='home.html'" class="btn-return">
+                Return to Merchant
+            </button>
+        </div>
+
+    </div>
+
+    <div class="text-center text-[10px] text-gray-400 mt-auto mb-6">
+        <i class="fa-solid fa-lock text-[8px] mr-1"></i>
+        Authenticated by Bank of America SecurePass
+    </div>
+
+    <script>
+        // Simulate Network Delay then Fail
+        setTimeout(() => {
+            document.getElementById('view-loading').classList.add('hidden');
+            document.getElementById('view-error').classList.remove('hidden');
+            document.getElementById('view-error').classList.add('flex');
+            
+            // Haptic Feedback for error
+            if(navigator.vibrate) navigator.vibrate([100, 50, 200]);
+        }, 3000); // 3 seconds delay
+    </script>
+
+</body>
+</html>
+

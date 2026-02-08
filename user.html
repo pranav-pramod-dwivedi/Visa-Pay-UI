@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Social</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --surface: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface);
+            color: #0F172A;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SKELETON --- */
+        #skeleton-screen {
+            position: fixed; inset: 0; background: white; z-index: 2000;
+            transition: opacity 0.5s ease; padding: 24px;
+        }
+        .skeleton-block {
+            background: #f1f5f9; border-radius: 12px; position: relative; overflow: hidden;
+        }
+        .skeleton-block::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: shimmer 1s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+
+        /* --- PROFILE HEADER --- */
+        .social-header {
+            padding: 30px 24px 10px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        
+        .pfp-container {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: conic-gradient(from 180deg, #0052FF, #00C2FF, #0052FF);
+            padding: 3px; position: relative; margin-bottom: 16px;
+            animation: rotateGlow 10s linear infinite;
+        }
+        .pfp-img {
+            width: 100%; height: 100%; border-radius: 50%; border: 4px solid white; object-fit: cover;
+        }
+        .rank-badge {
+            position: absolute; bottom: 0; right: 0;
+            background: #000; color: #FFD700; font-size: 10px; font-weight: 800;
+            padding: 4px 8px; border-radius: 12px; border: 2px solid white;
+        }
+        @keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- ORBITAL SYSTEM --- */
+        .orbit-container {
+            position: relative; width: 300px; height: 300px; margin: 0 auto 20px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .sun-profile {
+            width: 90px; height: 90px; border-radius: 50%; z-index: 10;
+            background: white; border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0, 82, 255, 0.3);
+            position: relative; overflow: hidden;
+        }
+        .sun-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .orbit-track {
+            position: absolute; border: 1px dashed rgba(0, 82, 255, 0.1); border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .track-1 { width: 160px; height: 160px; animation: spinRight 20s linear infinite; }
+        .track-2 { width: 260px; height: 260px; animation: spinLeft 30s linear infinite; }
+
+        .planet {
+            position: absolute; width: 40px; height: 40px; border-radius: 50%;
+            background: white; border: 2px solid #fff; overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;
+        }
+        .planet img { width: 100%; height: 100%; object-fit: cover; }
+
+        .track-1 .p1 { top: -20px; left: 50%; margin-left: -20px; }
+        .track-1 .p2 { bottom: -20px; left: 50%; margin-left: -20px; }
+        .track-1 .p3 { top: 50%; left: -20px; margin-top: -20px; }
+        .track-2 .p4 { top: 20px; right: 20px; }
+        .track-2 .p5 { bottom: 20px; left: 20px; }
+        .track-2 .p6 { top: 50%; right: -20px; margin-top: -20px; }
+        .track-2 .p7 { bottom: -20px; left: 50%; margin-left: -20px; }
+
+        @keyframes spinRight { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes spinLeft { 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
+        
+        /* Counter-rotate planets to keep them upright */
+        .track-1 .planet { animation: counterSpinRight 20s linear infinite; }
+        .track-2 .planet { animation: counterSpinLeft 30s linear infinite; }
+        
+        @keyframes counterSpinRight { 100% { transform: rotate(-360deg); } }
+        @keyframes counterSpinLeft { 100% { transform: rotate(360deg); } }
+
+        /* --- STATS ROW --- */
+        .social-stats { display: flex; justify-content: center; gap: 30px; width: 100%; margin-bottom: 30px; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-num { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+        .stat-label { font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* --- SOCIAL RADAR (Glassmorphism) --- */
+        .radar-card {
+            margin: 0 24px 30px; height: 180px; border-radius: 32px; position: relative; overflow: hidden;
+            background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(240,249,255,0.4) 100%);
+            backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 15px 40px -10px rgba(0, 82, 255, 0.15);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .radar-screen {
+            width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(0,82,255,0.2);
+            position: relative; margin-bottom: 10px;
+            background: radial-gradient(circle, rgba(0,82,255,0.05) 0%, transparent 70%);
+        }
+        .radar-sweep {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(0,82,255,0.1) 60deg, transparent 60deg);
+            animation: radarSpin 3s linear infinite;
+        }
+        .blip {
+            position: absolute; width: 6px; height: 6px; background: #0052FF; border-radius: 50%;
+            box-shadow: 0 0 8px #0052FF; animation: blipPulse 2s infinite;
+        }
+        @keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes blipPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
+        .radar-text { font-size: 10px; font-weight: 800; color: #0052FF; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* --- REWARDS --- */
+        .rewards-container { display: flex; gap: 16px; overflow-x: auto; padding: 10px 24px 30px; scroll-snap-type: x mandatory; }
+        .rewards-container::-webkit-scrollbar { display: none; }
+        .glass-coupon {
+            min-width: 260px; height: 140px; border-radius: 24px; position: relative; flex-shrink: 0; scroll-snap-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+            backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.05); padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .coupon-brand { font-weight: 800; font-size: 1.2rem; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .coupon-offer { font-size: 2rem; font-weight: 900; color: #0052FF; line-height: 1; }
+        .coupon-desc { font-size: 0.7rem; font-weight: 600; color: #64748b; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* --- STORY EVENTS --- */
+        .story-container { display: flex; gap: 12px; overflow-x: auto; padding: 0 24px 30px; scrollbar-width: none; }
+        .story-container::-webkit-scrollbar { display: none; }
+        .story-card {
+            min-width: 140px; height: 220px; border-radius: 20px; position: relative; flex-shrink: 0;
+            overflow: hidden; box-shadow: 0 8px 20px -5px rgba(0,0,0,0.1);
+        }
+        .story-img { width: 100%; height: 100%; object-fit: cover; }
+        .story-overlay {
+            position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
+            padding: 12px; display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .story-title { color: white; font-weight: 700; font-size: 0.8rem; line-height: 1.2; }
+        .story-badge { 
+            position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); 
+            color: #000; font-size: 0.6rem; font-weight: 800; padding: 3px 6px; border-radius: 6px; text-transform: uppercase;
+        }
+
+        /* --- MASONRY FEED --- */
+        .masonry-grid { column-count: 2; column-gap: 8px; padding: 0 24px 30px; }
+        .masonry-item { break-inside: avoid; margin-bottom: 8px; border-radius: 16px; overflow: hidden; background: #f1f5f9; }
+        .masonry-img { width: 100%; display: block; object-fit: cover; }
+
+        /* --- GIFT HISTORY --- */
+        .gift-container { padding: 0 24px 100px; }
+        .gift-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .gift-left { display: flex; align-items: center; gap: 12px; }
+        .gift-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 14px; overflow: hidden; }
+        .gift-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .gift-info h4 { font-size: 13px; font-weight: 700; color: #1e293b; }
+        .gift-info p { font-size: 10px; color: #64748b; font-weight: 500; }
+        .gift-icon { width: 32px; height: 32px; background: #fff1f2; color: #f43f5e; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+        /* --- SYSTEM LIST --- */
+        .bank-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid #f1f5f9; border-radius: 20px; margin-bottom: 12px; background: white; transition: 0.2s; }
+        .bank-item:active { transform: scale(0.98); background: #f8fafc; }
+        .bank-logo { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #ef4444; font-size: 1.2rem; }
+
+        /* --- PIN LOCKDOWN --- */
+        #pin-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(40px); display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #pin-overlay.active { display: flex; }
+        .pass-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #cbd5e1; transition: 0.3s; }
+        .pass-dot.filled { background: var(--visa-blue); border-color: var(--visa-blue); }
+        .num-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 40px; }
+        .num-key { width: 70px; height: 70px; border-radius: 50%; background: white; border: 1px solid #e2e8f0; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .num-key:active { background: #0052FF; color: white; }
+
+        /* --- WATCH NAV --- */
+        .watch-strap { height: 54px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 1px solid rgba(255,255,255,0.6); }
+        .watch-case { width: 68px; height: 68px; background: linear-gradient(135deg, #0052FF 0%, #002D8F 100%); box-shadow: 0 12px 30px rgba(0,82,255,0.35); border: 4px solid white; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 80% { transform: translateX(10px); } }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative bg-white">
+
+    <!-- 1. Skeleton -->
+    <div id="skeleton-screen">
+        <div class="flex flex-col items-center mt-10 mb-8">
+            <div class="w-24 h-24 rounded-full skeleton-block mb-4"></div>
+            <div class="w-40 h-6 rounded-full skeleton-block mb-2"></div>
+            <div class="w-20 h-4 rounded-full skeleton-block"></div>
+        </div>
+        <div class="flex justify-center gap-8 mb-10">
+            <div class="w-16 h-12 rounded-lg skeleton-block"></div>
+            <div class="w-16 h-12 rounded-lg skeleton-block"></div>
+            <div class="w-16 h-12 rounded-lg skeleton-block"></div>
+        </div>
+        <div class="h-24 mx-6 rounded-2xl skeleton-block mb-8"></div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen pb-40">
+        
+        <!-- Header -->
+        <header class="flex justify-center items-center px-6 pt-8 pb-2 relative">
+            <h1 class="text-[13px] font-extrabold text-slate-900 tracking-[0.1em] uppercase">pranav_d_18</h1>
+        </header>
+
+        <!-- ORBITAL SYSTEM -->
+        <div class="orbit-container">
+            <div class="orbit-track track-1">
+                <div class="planet p1"><img src="/IMG_20251221_172718.jpg" alt="Friend"></div>
+                <div class="planet p2"><img src="/IMG_20251213_100449.jpg" alt="Friend"></div>
+                <div class="planet p3"><i class="fa-brands fa-apple text-xl text-black"></i></div>
+            </div>
+            <div class="orbit-track track-2">
+                <div class="planet p4"><i class="fa-brands fa-spotify text-xl text-green-600"></i></div>
+                <div class="planet p5"><img src="/Screenshot_2025-12-21-17-28-39-037_com.instagram.lite-edit.jpg" alt="Friend"></div>
+                <div class="planet p6"><span class="text-xs font-bold text-slate-600">MK</span></div>
+                <div class="planet p7"><i class="fa-brands fa-netflix text-xl text-red-600"></i></div>
+            </div>
+            <!-- SUN -->
+            <div class="sun-profile">
+                <img src="/IMG_20251214_013513.jpg" alt="Pranav" class="sun-img">
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+            <h2 class="text-xl font-black text-slate-900 mb-1">Pranav D. <i class="fa-solid fa-circle-check text-blue-600 text-sm ml-1"></i></h2>
+            <div class="mt-4">
+                <button onclick="triggerPin()" class="bg-slate-900 text-white px-8 py-2.5 rounded-full text-[11px] font-bold shadow-lg active:scale-95 transition-transform">Edit Profile</button>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="social-stats">
+            <div class="stat-item"><span class="stat-num">12</span><span class="stat-label">Circle</span></div>
+            <div class="stat-item"><span class="stat-num">$563K</span><span class="stat-label">Spent</span></div>
+            <div class="stat-item"><span class="stat-num">#7,807</span><span class="stat-label">Rank</span></div>
+        </div>
+
+        <!-- SOCIAL RADAR (NEW) -->
+        <div class="radar-card">
+            <div class="radar-screen">
+                <div class="radar-sweep"></div>
+                <div class="blip" style="top: 30%; left: 40%"></div>
+                <div class="blip" style="top: 70%; left: 70%; animation-delay: 1s"></div>
+            </div>
+            <p class="radar-text">SCANNING FOR DEALS</p>
+        </div>
+
+        <!-- REWARDS EARNED -->
+        <div class="px-6 mb-3"><h3 class="text-[14px] font-extrabold text-slate-900">Rewards Earned</h3></div>
+        <div class="rewards-container">
+            <div class="glass-coupon">
+                <div class="coupon-brand"><i class="fa-brands fa-nike text-xl"></i> Nike</div>
+                <div class="coupon-offer">90%<span class="text-lg align-top text-slate-900">OFF</span></div>
+                <div class="coupon-desc">Sneaker Access</div>
+            </div>
+            <div class="glass-coupon">
+                <div class="coupon-brand"><i class="fa-brands fa-apple text-xl"></i> Apple</div>
+                <div class="coupon-offer">$200<span class="text-lg align-top text-slate-900">CASH</span></div>
+                <div class="coupon-desc">Store Credit</div>
+            </div>
+            <div class="glass-coupon">
+                <div class="coupon-brand"><i class="fa-solid fa-plane text-xl"></i> Emirates</div>
+                <div class="coupon-offer">1st<span class="text-lg align-top text-slate-900">CLASS</span></div>
+                <div class="coupon-desc">Upgrade Available</div>
+            </div>
+        </div>
+
+        <!-- EVENTS -->
+        <div class="px-6 mb-3 mt-4"><h3 class="text-[14px] font-extrabold text-slate-900">Upcoming Events</h3></div>
+        <div class="story-container">
+            <div class="story-card">
+                <div class="story-overlay"><p class="story-badge text-red-600">Live</p><h4 class="story-title">F1 Monaco<br>Grand Prix</h4></div>
+                <img src="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300" class="story-img">
+            </div>
+            <div class="story-card">
+                <div class="story-overlay"><p class="story-badge text-purple-600">VIP</p><h4 class="story-title">Paris Fashion<br>Week</h4></div>
+                <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=300" class="story-img">
+            </div>
+            <div class="story-card">
+                <div class="story-overlay"><p class="story-badge text-pink-600">Music</p><h4 class="story-title">Tomorrowland<br>Belgium</h4></div>
+                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300" class="story-img">
+            </div>
+             <div class="story-card">
+                <div class="story-overlay"><p class="story-badge text-blue-600">Space</p><h4 class="story-title">Galactic<br>Tour</h4></div>
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300" class="story-img">
+            </div>
+        </div>
+
+        <!-- LIFESTYLE GALLERY -->
+        <div class="px-6 mb-3 mt-6"><h3 class="text-[14px] font-extrabold text-slate-900">Lifestyle Gallery</h3></div>
+        <div class="masonry-grid">
+            <div class="masonry-item"><img src="/imgs/IMG_20251223_115912.jpg" class="masonry-img"></div>
+            <div class="masonry-item"><img src="/imgs/Screenshot_2025-12-23-11-58-22-061_com.miui.mediaviewer.jpg" class="masonry-img"></div>
+            <div class="masonry-item"><img src="/imgs/Screenshot_2025-12-23-11-56-49-824_com.miui.mediaviewer.jpg" class="masonry-img"></div>
+            <div class="masonry-item"><img src="./imgs/Screenshot_2025-12-23-11-56-20-577_com.miui.mediaviewer-edit.jpg" class="masonry-img"></div>
+        </div>
+        
+<!-- SYSTEM -->
+        <div class="px-6 space-y-3 mt-6">
+            <h3 class="text-[14px] font-extrabold text-slate-900 mb-2">System</h3>
+            <a href="#" class="bank-item">
+                <div class="flex items-center gap-4">
+                    <div class="bank-logo bg-red-50 text-red-600"><i class="fa-solid fa-building-columns"></i></div>
+                    <div><p class="text-[13px] font-bold text-slate-900">Bank of America</p><p class="text-[10px] text-slate-400">Primary • **** 4290</p></div>
+                </div>
+<i class="fa-solid fa-lock text-xs text-red-300"></i>
+            </a>
+            <a href="transactions.html" class="bank-item">
+                <div class="flex items-center gap-4">
+                    <div class="bank-logo bg-blue-50 text-blue-600"><i class="fa-solid fa-receipt"></i></div>
+                    <div><p class="text-[13px] font-bold text-slate-900">Transactions</p><p class="text-[10px] text-slate-400">History</p></div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+            </a>
+            <a href="address.html" class="bank-item">
+                <div class="flex items-center gap-4">
+                    <div class="bank-logo bg-slate-50 text-slate-600"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <div><p class="text-[13px] font-bold text-slate-900">Registered Address</p><p class="text-[10px] text-slate-400">Quebec, Canada</p></div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+            </a>
+            <div class="bank-item border-red-100 bg-red-50/50">
+                <div class="flex items-center gap-4">
+                    <div class="bank-logo bg-red-100 text-red-600"><i class="fa-solid fa-trash"></i></div>
+                    <div><p class="text-[13px] font-bold text-red-600">Delete Account</p><p class="text-[10px] text-red-400">Locked</p></div>
+                </div>
+                <i class="fa-solid fa-lock text-xs text-red-300"></i>
+            </div>
+        </div>
+
+        <!-- GIFT HISTORY -->
+        <div class="px-6 mt-8">
+            <h3 class="text-[14px] font-extrabold text-slate-900 mb-4">Gifts Received</h3>
+            <div id="gift-list" class="space-y-2"></div>
+        </div>
+
+    </div>
+
+    <!-- PIN OVERLAY -->
+    <div id="pin-overlay">
+        <h2 class="text-xl font-black text-slate-900 mb-2">Verify Identity</h2>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-10">Enter Passcode to Edit</p>
+        <div class="flex gap-4 mb-10">
+            <div class="pass-dot"></div><div class="pass-dot"></div><div class="pass-dot"></div><div class="pass-dot"></div>
+        </div>
+        <div class="num-pad">
+            <button onclick="tapKey()" class="num-key">1</button><button onclick="tapKey()" class="num-key">2</button><button onclick="tapKey()" class="num-key">3</button>
+            <button onclick="tapKey()" class="num-key">4</button><button onclick="tapKey()" class="num-key">5</button><button onclick="tapKey()" class="num-key">6</button>
+            <button onclick="tapKey()" class="num-key">7</button><button onclick="tapKey()" class="num-key">8</button><button onclick="tapKey()" class="num-key">9</button>
+            <div></div><button onclick="tapKey()" class="num-key">0</button>
+        </div>
+        <button onclick="closePin()" class="mt-8 text-slate-400 font-bold text-xs uppercase tracking-widest">Cancel</button>
+    </div>
+
+    <!-- WATCH NAV -->
+    <div id="floating-nav" class="fixed bottom-6 left-6 right-6 max-w-[calc(100%-48px)] mx-auto z-50">
+        <div class="relative flex items-center">
+            <nav class="watch-strap w-full rounded-full px-6 flex justify-between items-center">
+                <div class="flex gap-10">
+                    <a href="home.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-house-chimney text-[18px]"></i><span class="text-[9px] font-bold">Home</span></a>
+                    <a href="cards.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-credit-card text-[18px]"></i><span class="text-[9px] font-bold">Cards</span></a>
+                </div>
+                <div class="flex gap-10">
+                    <a href="stats.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-chart-line text-[18px]"></i><span class="text-[9px] font-bold">Stats</span></a>
+                    <a href="user.html" class="flex flex-col items-center gap-0.5 text-blue-600"><i class="fa-solid fa-user-circle text-[18px]"></i><span class="text-[9px] font-bold">User</span></a>
+                </div>
+            </nav>
+            <a href="pay.html" class="watch-case rounded-full flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform"><i class="fa-solid fa-qrcode text-[26px]"></i></a>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => { document.body.classList.add('loaded'); generateGifts(); }, 850);
+        };
+
+        function generateGifts() {
+            const container = document.getElementById('gift-list');
+            // Divyanshi specific Logic
+            const romanticGifts = ["Candlelit Dinner 🕯️", "Movie Night 🎟️", "Coffee Date ☕", "Red Roses 🌹"];
+            const randomGifts = ["Uber Credit 🚗", "Amazon Card 🎁", "Cash 💸", "Lunch 🥗"];
+            const friends = ["Sarah", "Mike", "Raj", "Tom", "Liz"];
+            const colors = ["bg-purple-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-orange-500"];
+            
+            let html = '';
+            for(let i=0; i<32; i++) {
+                // High probability for Divyanshi
+                const isDivyanshi = Math.random() > 0.4;
+                let name, gift, avatar;
+                
+                if (isDivyanshi) {
+                    name = "Divyanshi";
+                    gift = romanticGifts[Math.floor(Math.random() * romanticGifts.length)];
+                    // Use love.jpg for Divyanshi
+                    avatar = `<img src="love.jpg" onerror="this.src='/IMG_20251221_172718.jpg'" alt="Love" class="w-full h-full object-cover">`;
+                } else {
+                    name = friends[Math.floor(Math.random() * friends.length)];
+                    gift = randomGifts[Math.floor(Math.random() * randomGifts.length)];
+                    const c = colors[Math.floor(Math.random() * colors.length)];
+                    avatar = `<span class="${c} w-full h-full flex items-center justify-center">${name.charAt(0)}</span>`;
+                }
+
+                const daysAgo = Math.floor(Math.random() * 300) + 123;
+                
+                html += `
+                <div class="gift-item">
+                    <div class="gift-left">
+                        <div class="gift-avatar overflow-hidden bg-slate-100">${avatar}</div>
+                        <div class="gift-info">
+                            <h4>${name} sent a Gift</h4>
+                            <p>${gift} • ${daysAgo}d ago</p>
+                        </div>
+                    </div>
+                    <div class="gift-icon"><i class="fa-solid fa-gift"></i></div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function launchTrip() { window.location.href = 'https://www.visa.co.in/pay-with-visa/offers-and-perks.html'; }
+
+        function triggerPin() { document.getElementById('pin-overlay').classList.add('active'); }
+        function closePin() { document.getElementById('pin-overlay').classList.remove('active'); resetDots(); }
+        let dotsFilled = 0;
+        function tapKey() {
+            if(dotsFilled < 4) {
+                document.querySelectorAll('.pass-dot')[dotsFilled].classList.add('filled');
+                dotsFilled++;
+                if(dotsFilled === 4) setTimeout(() => { document.getElementById('pin-overlay').style.animation="shake 0.4s"; setTimeout(() => { document.getElementById('pin-overlay').style.animation=""; resetDots(); }, 400); }, 300);
+            }
+        }
+        function resetDots() { dotsFilled=0; document.querySelectorAll('.pass-dot').forEach(d => d.classList.remove('filled')); }
+    </script>
+    <style>@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 80% { transform: translateX(10px); } }</style>
+</body>
+</html>

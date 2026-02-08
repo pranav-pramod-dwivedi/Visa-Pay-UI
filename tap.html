@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tap to Pay - Visa Infinite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+
+        body.nfc-off {
+            background-color: #1e293b;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        /* --- MAIN RADAR AREA --- */
+        .radar-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .signal-icon {
+            font-size: 4rem;
+            color: #3b82f6;
+            z-index: 20;
+            transition: color 0.3s, transform 0.3s;
+            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.6));
+        }
+        
+        .nfc-off .signal-icon {
+            color: #475569;
+            filter: none;
+            transform: scale(0.9);
+        }
+
+        /* Ripples */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        /* Animation Active */
+        body:not(.nfc-off) .ripple {
+            animation: rippleAnim 3s infinite cubic-bezier(0, 0.2, 0.8, 1);
+        }
+        
+        .ripple:nth-child(2) { animation-delay: 0.5s; }
+        .ripple:nth-child(3) { animation-delay: 1s; }
+        .ripple:nth-child(4) { animation-delay: 1.5s; }
+
+        @keyframes rippleAnim {
+            0% { width: 100px; height: 100px; opacity: 0.8; border-width: 4px; }
+            100% { width: 500px; height: 500px; opacity: 0; border-width: 0px; }
+        }
+
+        /* Off State Shield */
+        .shield-icon {
+            position: absolute;
+            font-size: 2.5rem;
+            color: #94a3b8;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 25;
+        }
+        .nfc-off .shield-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* --- CARD PREVIEW --- */
+        .card-preview {
+            width: 220px;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+        
+        .nfc-off .card-preview {
+            opacity: 0.4;
+            transform: translateX(-50%) translateY(10px) scale(0.95);
+            filter: grayscale(100%);
+        }
+
+        /* --- FOOTER CONTROLS --- */
+        .controls {
+            padding: 0 30px 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        /* Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            padding: 16px 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: #334155;
+            border-radius: 50px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-knob {
+            width: 24px; height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; left: 2px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        body:not(.nfc-off) .toggle-switch { background: #3b82f6; }
+        body:not(.nfc-off) .toggle-knob { transform: translateX(22px); }
+
+        /* Status Text */
+        .status-text {
+            font-family: 'Space Grotesk', sans-serif;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+        body:not(.nfc-off) .status-text { color: #60a5fa; text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .nfc-off .status-text { color: #94a3b8; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-md">
+            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse" id="secure-dot"></div>
+            <span class="text-xs font-bold tracking-wider opacity-80" id="secure-label">SECURE</span>
+        </div>
+    </div>
+
+    <!-- Main Animation (No Interaction) -->
+    <div class="radar-container">
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        
+        <i class="fa-solid fa-wifi rotate-90 signal-icon"></i>
+        <i class="fa-solid fa-lock shield-icon"></i>
+        
+        <!-- Card Preview -->
+        <div class="card-preview">
+            <div class="flex justify-between items-start">
+                <i class="fa-brands fa-cc-visa text-2xl opacity-90"></i>
+                <i class="fa-solid fa-wifi rotate-90 text-sm opacity-70"></i>
+            </div>
+            <div>
+                <p class="text-[10px] uppercase opacity-50 tracking-widest font-bold">Infinite</p>
+                <p class="font-mono text-sm opacity-90">•••• 8144</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <p class="status-text" id="main-status">HOLD NEAR READER</p>
+        
+        <div class="switch-container">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400" id="icon-bg">
+                    <i class="fa-solid fa-mobile-screen-button" id="control-icon"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold">NFC Payment</span>
+                    <span class="text-[10px] opacity-50" id="sub-status">Ready to transmit</span>
+                </div>
+            </div>
+            
+            <div class="toggle-switch" onclick="toggleNFC()">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isNFCActive = true;
+        const body = document.body;
+        const statusText = document.getElementById('main-status');
+        const subStatus = document.getElementById('sub-status');
+        const secureDot = document.getElementById('secure-dot');
+        const secureLabel = document.getElementById('secure-label');
+        const iconBg = document.getElementById('icon-bg');
+        const controlIcon = document.getElementById('control-icon');
+
+        function toggleNFC() {
+            isNFCActive = !isNFCActive;
+            
+            if (isNFCActive) {
+                // Turn ON
+                body.classList.remove('nfc-off');
+                statusText.innerText = "HOLD NEAR READER";
+                subStatus.innerText = "Ready to transmit";
+                secureDot.className = "w-2 h-2 rounded-full bg-green-400 animate-pulse";
+                secureLabel.innerText = "SECURE";
+                iconBg.className = "w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400";
+                controlIcon.className = "fa-solid fa-mobile-screen-button";
+                
+                // Haptic
+                if(navigator.vibrate) navigator.vibrate(20);
+            } else {
+                // Turn OFF
+                body.classList.add('nfc-off');
+                statusText.innerText = "PAYMENT DISABLED";
+                subStatus.innerText = "NFC radio off";
+                secureDot.className = "w-2 h-2 rounded-full bg-red-500";
+                secureLabel.innerText = "OFFLINE";
+                iconBg.className = "w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400";
+                controlIcon.className = "fa-solid fa-lock";
+                
+                // Haptic
+                if(navigator.vibrate) navigator.vibrate([10, 10]);
+            }
+        }
+    </script>
+
+</body>
+</html>
+
+

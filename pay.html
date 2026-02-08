@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Visa Infinite Pay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F4F6F9;
+            color: #1a1b1e;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        /* --- 1. FINANCIAL AURA --- */
+        .aura-background {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: #F4F6F9; overflow: hidden;
+        }
+        .aura-orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(80px); opacity: 0.6;
+            animation: float 10s infinite ease-in-out;
+        }
+        .orb-1 { width: 300px; height: 300px; background: rgba(59, 130, 246, 0.15); top: -50px; left: -100px; }
+        .orb-2 { width: 400px; height: 400px; background: rgba(234, 179, 8, 0.1); bottom: -100px; right: -50px; animation-delay: -5s; }
+        .orb-3 { width: 200px; height: 200px; background: rgba(168, 85, 247, 0.1); top: 40%; left: 30%; animation-delay: -2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* --- UTILS --- */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .animate-enter { animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
+
+        /* --- MODAL SYSTEM --- */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .custom-modal {
+            background: rgba(255, 255, 255, 0.9);
+            width: 85%; max-width: 320px;
+            border-radius: 30px;
+            padding: 30px 20px;
+            text-align: center;
+            transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.8);
+            position: relative; overflow: hidden;
+        }
+        .modal-overlay.active .custom-modal { transform: scale(1); }
+
+        .anim-icon-container {
+            width: 80px; height: 80px; margin: 0 auto 20px;
+            background: #F4F6F9; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; position: relative;
+        }
+        .pulse-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 2px solid currentColor; opacity: 0;
+            animation: ringPulse 2s infinite;
+        }
+        @keyframes ringPulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+        .floating { animation: iconFloat 3s ease-in-out infinite; }
+        @keyframes iconFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* --- HEADER --- */
+        .header-section {
+            position: sticky; top: 0; z-index: 50; padding: 16px 20px;
+            background: rgba(244, 246, 249, 0.85); backdrop-filter: blur(12px);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .profile-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.8); padding: 6px 16px 6px 6px;
+            border-radius: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* --- ACTION GRID --- */
+        .action-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); 
+            gap: 16px 12px; padding: 0 20px 24px 20px;
+        }
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+        .action-icon {
+            width: 56px; height: 56px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; background: rgba(255,255,255,0.9); color: #1a1b1e;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); transition: 0.2s;
+        }
+        .action-item:active .action-icon { transform: scale(0.9); }
+        .action-text { font-size: 0.7rem; font-weight: 600; text-align: center; color: #5e6b7c; }
+
+        /* --- SMART FEED --- */
+        .smart-feed-container {
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; padding: 10px 20px 30px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .smart-card {
+            min-width: 85%; scroll-snap-align: center; background: white; border-radius: 24px; padding: 20px;
+            border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            display: flex; flex-direction: column; justify-content: space-between; height: 160px; position: relative; transition: transform 0.3s ease;
+        }
+        .smart-card:active { transform: scale(0.98); }
+        .bill-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: contain; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .pay-btn {
+            background: #1a1b1e; color: white; font-size: 0.8rem; font-weight: 700; padding: 10px 20px; border-radius: 50px;
+            width: 100%; text-align: center; margin-top: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.1s;
+        }
+        .pay-btn:active { transform: scale(0.95); }
+
+        /* --- PEOPLE --- */
+        .people-row { display: flex; gap: 20px; overflow-x: auto; padding: 0 20px 10px 20px; align-items: flex-start; }
+        .person-item {
+            display: flex; flex-direction: column; align-items: center; gap: 8px; 
+            min-width: 70px; flex-shrink: 0; cursor: pointer;
+        }
+        .person-img { 
+            width: 64px; height: 64px; border-radius: 50%; object-fit: cover; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 2px solid white; 
+            flex-shrink: 0; transition: transform 0.2s;
+        }
+        .person-item:active .person-img { transform: scale(0.95); }
+        .person-name { 
+            font-size: 0.75rem; font-weight: 500; color: #4b5563; 
+            text-align: center; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* --- ADS --- */
+        .ad-scroll-container { display: flex; gap: 16px; overflow-x: auto; padding: 0 20px 30px 20px; }
+        .ad-card {
+            min-width: 280px; height: 160px; border-radius: 28px; position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); color: white; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px;
+            background: #1a1b1e; flex-shrink: 0; cursor: pointer; transition: transform 0.2s;
+        }
+        .ad-card:active { transform: scale(0.98); }
+        .ad-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; z-index: 0; }
+        .ad-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, transparent 100%); z-index: 1; }
+        .ad-content { position: relative; z-index: 10; }
+        .ad-card:hover .ad-bg-img { transform: scale(1.05); }
+
+        /* --- FOOTER --- */
+        .visa-footer {
+            padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+            opacity: 0.6; filter: grayscale(100%); transition: 0.3s;
+        }
+        .visa-footer:hover { opacity: 1; filter: grayscale(0%); }
+
+    </style>
+</head>
+<body>
+
+    <!-- BACKGROUND -->
+    <div class="aura-background">
+        <div class="aura-orb orb-1"></div>
+        <div class="aura-orb orb-2"></div>
+        <div class="aura-orb orb-3"></div>
+    </div>
+
+    <!-- HEADER (Linked to home.html) -->
+    <header class="header-section animate-enter">
+        <button onclick="window.location.href='home.html'" class="w-10 h-10 rounded-full bg-white/80 shadow-sm flex items-center justify-center text-gray-800 active:scale-95 transition-transform border border-white/50">
+            <i class="fa-solid fa-house"></i>
+        </button>
+
+        <div class="profile-pill">
+            <img src="/IMG_20251214_013513.jpg" class="w-8 h-8 rounded-full object-cover border border-gray-200">
+
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Hello</span>
+                <span class="text-sm font-bold text-gray-800 leading-none">@pranav_d_18</span>
+            </div>
+        </div>
+        
+        <button class="w-10 h-10 rounded-full bg-white/80 shadow-sm flex items-center justify-center text-gray-600 active:scale-95 transition-transform border border-white/50"><i class="fa-regular fa-bell"></i></button>
+    </header>
+
+    <!-- SEARCH -->
+    <div class="mx-5 mb-6 animate-enter delay-1">
+        <div class="bg-white rounded-2xl p-3.5 flex items-center gap-3 shadow-sm">
+            <i class="fa-solid fa-magnifying-glass text-blue-600"></i>
+            <input type="text" placeholder="Pay friends, numbers, or bills" class="w-full outline-none text-sm font-medium bg-transparent placeholder-gray-400">
+        </div>
+    </div>
+
+    <!-- ACTION GRID (Linked to feature.html & Popups) -->
+    <div class="action-grid animate-enter delay-2">
+        <!-- Tap to Pay -> feature.html -->
+        <div class="action-item" onclick="window.location.href='tap.html'">
+            <div class="action-icon text-blue-600"><i class="fa-solid fa-wifi rotate-90"></i></div>
+            <span class="action-text">Tap to Pay</span>
+        </div>
+        
+        <!-- To Contact -> feature.html -->
+        <div class="action-item" onclick="window.location.href='feature.html'">
+            <div class="action-icon text-indigo-600"><i class="fa-solid fa-user-group"></i></div>
+            <span class="action-text">To Contact</span>
+        </div>
+        
+        <!-- To Username -> Popup -->
+<div class="action-item" onclick="window.location.href='feature.html'">
+    <div class="action-icon text-teal-600"><i class="fa-solid fa-at"></i></div>
+    <span class="action-text">To Username</span>
+</div>
+
+        
+        <!-- Bank Txn -> feature.html -->
+        <div class="action-item" onclick="window.location.href='transactions.html'">
+            <div class="action-icon text-purple-600"><i class="fa-solid fa-building-columns"></i></div>
+            <span class="action-text">Bank Txn</span>
+        </div>
+        
+        <!-- Self Transfer -> feature.html -->
+        <div class="action-item" onclick="window.location.href='feature.html'">
+            <div class="action-icon text-orange-500"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+            <span class="action-text">Self Transfer</span>
+        </div>
+        
+        <!-- Pay Bills -> Popup -->
+        <div class="action-item" onclick="openPopup('bills')">
+            <div class="action-icon text-red-500"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <span class="action-text">Pay Bills</span>
+        </div>
+        
+        <!-- Recharge -> Popup -->
+        <div class="action-item" onclick="openPopup('recharge')">
+            <div class="action-icon text-green-500"><i class="fa-solid fa-bolt"></i></div>
+            <span class="action-text">Recharge</span>
+        </div>
+        
+        <!-- Credit Score -> Popup -->
+        <div class="action-item" onclick="openPopup('credit')">
+            <div class="action-icon text-gray-700"><i class="fa-solid fa-chart-line"></i></div>
+            <span class="action-text">Credit Score</span>
+        </div>
+    </div>
+
+    <!-- PEOPLE (Linked to respective-friend.html) -->
+    <div class="px-5 mb-4 mt-2 animate-enter delay-3">
+        <h3 class="text-base font-bold text-gray-800 mb-4">Quick Pay</h3>
+    </div>
+    <div class="people-row hide-scrollbar animate-enter delay-3">
+        <div class="person-item" onclick="window.location.href='divyanshi.html'">
+            <img src="/IMG_20251221_172718.jpg" class="person-img">
+            <span class="person-name">Divyanshi</span>
+        </div>
+        <div class="person-item" onclick="window.location.href='sarah.html'">
+            <img src="/Screenshot_2025-12-21-17-28-39-037_com.instagram.lite-edit.jpg" class="person-img">
+            <span class="person-name">diivii</span>
+        </div>
+        <div class="person-item" onclick="window.location.href='mike.html'">
+            <img src="/IMG_20251213_100449.jpg" class="person-img">
+            <span class="person-name">Mike</span>
+        </div>
+       <div class="person-item" onclick="window.location.href='raj.html'">
+    <!-- Added class="person-img" -->
+    <img src="/IMG_20251223_010626.jpg" class="person-img"> 
+    <span class="person-name">Raj</span>
+
+
+        </div>
+        <div class="person-item">
+            <div class="w-[64px] h-[64px] rounded-full bg-white border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+            <span class="person-name">Add</span>
+        </div>
+    </div>
+
+    <!-- SMART BILL FEED -->
+    <div class="px-5 mt-8 mb-2 flex items-end justify-between animate-enter delay-3">
+        <h3 class="text-base font-bold text-gray-800">Pending Actions</h3>
+        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">3 Due</span>
+    </div>
+    <div class="smart-feed-container hide-scrollbar animate-enter delay-3" id="bill-feed"></div>
+
+    <!-- ADS (Linked to offers.html) -->
+    <div class="px-5 mb-4 animate-enter delay-3 flex justify-between items-end">
+        <h3 class="text-base font-bold text-gray-800">Exclusive For You</h3>
+        <span class="text-xs font-bold text-blue-600 cursor-pointer" onclick="window.location.href='offers.html'">See all</span>
+    </div>
+    <div class="ad-scroll-container hide-scrollbar animate-enter delay-3">
+        <div class="ad-card" onclick="window.location.href='offers.html'">
+            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80" class="ad-bg-img">
+            <div class="ad-overlay"></div>
+            <div class="ad-content">
+                <div class="bg-white/20 backdrop-blur-md w-fit px-2 py-1 rounded text-[10px] font-bold mb-2 border border-white/20">NIKE • 15% OFF</div>
+                <h4 class="font-bold text-xl leading-tight">Air Max Collection</h4>
+            </div>
+        </div>
+        <div class="ad-card" onclick="window.location.href='offers.html'">
+            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80" class="ad-bg-img">
+            <div class="ad-overlay"></div>
+            <div class="ad-content">
+                <div class="bg-green-600/80 backdrop-blur-md w-fit px-2 py-1 rounded text-[10px] font-bold mb-2 text-white">STARBUCKS</div>
+                <h4 class="font-bold text-xl leading-tight">Free Latte on First Order</h4>
+            </div>
+        </div>
+        <div class="ad-card" onclick="window.location.href='offers.html'">
+            <img src="https://images.unsplash.com/photo-1519183071298-a2962feb14f4?auto=format&fit=crop&w=600&q=80" class="ad-bg-img">
+            <div class="ad-overlay"></div>
+            <div class="ad-content">
+                <div class="bg-black/60 backdrop-blur-md w-fit px-2 py-1 rounded text-[10px] font-bold mb-2 border border-white/20">APPLE</div>
+                <h4 class="font-bold text-xl leading-tight">MacBook Pro M3</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="visa-footer animate-enter delay-3">
+        <div class="flex items-center gap-2 text-gray-400 text-xs font-semibold">
+            <i class="fa-solid fa-lock"></i>
+            <span>End-to-end Encrypted</span>
+        </div>
+        <div class="flex items-center gap-2 mt-1">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Secured by</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" class="h-4 opacity-70">
+        </div>
+    </div>
+
+    <!-- OVERLAY POPUP SYSTEM -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closePopup(event)">
+        <div class="custom-modal" id="modal-content"></div>
+    </div>
+
+    <script>
+        // --- 1. BILL FEED DATA & RENDER ---
+        const bills = [
+            { id: 1, name: "Spotify Premium", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png", bg: "bg-black", amount: "$10.99", desc: "Duo Plan • Due Yesterday", tag: "EXPIRED", tagColor: "red" },
+            { id: 2, name: "ChatGPT Plus", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/1024px-ChatGPT_logo.svg.png", bg: "bg-emerald-50", amount: "$20.00", desc: "Card ..8899 declined", tag: "FAILED", tagColor: "orange" },
+            { id: 3, name: "Netflix UHD", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/1200px-Netflix_2015_logo.svg.png", bg: "bg-black", amount: "$15.49", desc: "Scheduled for Oct 24", tag: "AUTO", tagColor: "gray" },
+            { id: 4, name: "Apple One", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg", bg: "bg-white", amount: "$37.95", desc: "Premier Bundle", tag: "PENDING", tagColor: "gray" },
+            { id: 5, name: "Tesla Charge", logo: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png", bg: "bg-red-50", amount: "$18.50", desc: "Santa Monica Stn", tag: "NEW", tagColor: "blue" },
+        ];
+
+        const container = document.getElementById('bill-feed');
+
+        function renderFeed() {
+            container.innerHTML = '';
+            bills.forEach(bill => {
+                const el = document.createElement('div');
+                el.className = 'smart-card';
+                el.id = `bill-${bill.id}`;
+                
+                let tagHtml = '';
+                if(bill.tag) {
+                    const colorMap = { red: "bg-red-50 text-red-600", orange: "bg-orange-50 text-orange-600", gray: "bg-gray-100 text-gray-600", blue: "bg-blue-50 text-blue-600" };
+                    tagHtml = `<span class="${colorMap[bill.tagColor] || 'bg-gray-100'} text-[9px] font-bold px-1.5 py-0.5 rounded ml-2">${bill.tag}</span>`;
+                }
+
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-3">
+                            <img src="${bill.logo}" class="bill-logo ${bill.bg} object-contain p-1">
+                            <div>
+                                <div class="flex items-center">
+                                    <h4 class="font-bold text-sm text-gray-800">${bill.name}</h4>
+                                    ${tagHtml}
+                                </div>
+                                <p class="text-[10px] text-gray-500 font-medium mt-1">${bill.desc}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold text-lg">${bill.amount}</span>
+                    </div>
+                    <button class="pay-btn" onclick="payBill(this, '${bill.id}')">Pay Now <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></button>
+                `;
+                container.appendChild(el);
+            });
+            const spacer = document.createElement('div'); spacer.style.minWidth = "1px"; container.appendChild(spacer);
+        }
+
+        function payBill(btn, id) {
+            confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#22c55e', '#15803d'] });
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Paid'; btn.style.background = '#22c55e';
+            setTimeout(() => {
+                const card = document.getElementById(`bill-${id}`);
+                card.style.transform = 'translateY(-20px)'; card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            }, 800);
+        }
+        renderFeed();
+
+        // --- 2. POPUP LOGIC ---
+        function openPopup(type) {
+            const modal = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            
+            let html = '';
+            
+            if (type === 'bills') {
+                html = `
+                    <div class="anim-icon-container text-green-500">
+                        <div class="pulse-ring text-green-300"></div>
+                        <i class="fa-solid fa-mug-hot floating"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">All Clear!</h3>
+                    <p class="text-sm text-gray-500 mb-6">You have no pending bills. Enjoy your coffee ☕</p>
+                    <button class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl" onclick="closePopup(null, true)">Awesome</button>
+                `;
+            } else if (type === 'recharge') {
+                html = `
+                    <div class="anim-icon-container text-blue-500">
+                        <div class="pulse-ring text-blue-300"></div>
+                        <i class="fa-solid fa-bolt floating"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Fully Charged</h3>
+                    <p class="text-sm text-gray-500 mb-6">No recharge due. Your plan expires in <span class="font-bold text-gray-800">12 days</span>.</p>
+                    <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl" onclick="closePopup(null, true)">Got it</button>
+                `;
+            } else if (type === 'credit') {
+                html = `
+                    <div class="anim-icon-container text-red-500">
+                        <i class="fa-solid fa-satellite-dish floating mb-1"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Connection Lost</h3>
+                    <p class="text-sm text-gray-500 mb-6">Unable to reach Visa Secure servers at this moment.</p>
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl" onclick="closePopup(null, true)">Cancel</button>
+                        <button class="flex-1 bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-200">Retry</button>
+                    </div>
+                `;
+            } else if (type === 'username') {
+                html = `
+                    <div class="anim-icon-container text-teal-600">
+                        <i class="fa-solid fa-at floating"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Pay by Username</h3>
+                    <div class="bg-gray-100 rounded-xl p-1 flex items-center mb-6 border border-transparent focus-within:border-teal-500 focus-within:bg-white transition-all">
+                        <span class="pl-4 text-gray-400 font-bold">@</span>
+                        <input type="text" placeholder="username" class="w-full bg-transparent p-3 outline-none font-bold text-gray-800">
+                    </div>
+                    <button class="w-full bg-teal-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-200" onclick="alert('Verifying...'); closePopup(null, true)">Verify & Pay</button>
+                `;
+            }
+
+            content.innerHTML = html;
+            modal.classList.add('active');
+        }
+
+        function closePopup(e, force = false) {
+            if (force || e.target.id === 'modal-overlay') {
+                document.getElementById('modal-overlay').classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
+
+

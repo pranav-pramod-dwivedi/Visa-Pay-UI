@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaPay | Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+        
+        :root {
+            --visa-blue: #0052FF;
+            --visa-dark: #002D8F;
+            --surface: #FFFFFF;
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--surface);
+            color: var(--text-main);
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SKELETON --- */
+        .skeleton-block { background: #f1f5f9; position: relative; overflow: hidden; border-radius: 12px; }
+        .skeleton-block::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); animation: shimmer 0.8s infinite linear; }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        #skeleton-screen { position: fixed; inset: 0; background: white; z-index: 2000; transition: opacity 0.5s ease; padding: 24px; }
+        .loaded #skeleton-screen { opacity: 0; pointer-events: none; }
+
+        /* --- CLEAN GLASS CARD --- */
+        .clean-card {
+            /* Glassmorphism Core */
+            background: linear-gradient(135deg, rgba(0, 82, 255, 0.85) 0%, rgba(0, 45, 143, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            
+            /* Borders & Highlights */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.5); /* Top Light Reflection */
+            border-left: 1px solid rgba(255, 255, 255, 0.5); /* Left Light Reflection */
+            border-radius: 32px;
+            
+            /* Shadows for Depth */
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 82, 255, 0.4),
+                inset 0 0 30px rgba(255, 255, 255, 0.1); /* Inner Glow */
+
+            aspect-ratio: 1.586/1;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .clean-card:active { transform: scale(0.98); }
+
+        .chip {
+            width: 50px;
+            height: 35px;
+            background: linear-gradient(135deg, #b88746 0%, #fdf5a6 50%, #b88746 100%);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .chip::after { content: ""; position: absolute; left: 50%; top: 0; height: 100%; width: 1px; background: rgba(0,0,0,0.15); }
+        .chip::before { content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0,0,0,0.15); }
+        .chip-inner {
+            position: absolute; top: 20%; left: 20%; right: 20%; bottom: 20%;
+            border: 1px solid rgba(0,0,0,0.15); border-radius: 4px;
+        }
+
+        /* --- NUMBER PILL --- */
+        .number-pill {
+            background: #F8FAFC;
+            color: var(--text-sub);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            letter-spacing: 2px;
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: inline-block;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #F1F5F9;
+        }
+
+        /* --- ACTION BUTTONS --- */
+        .action-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; transition: transform 0.2s; }
+        .action-btn:active { transform: scale(0.9); }
+        
+        .icon-box {
+            width: 60px; height: 60px; border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; transition: all 0.2s; border: 1px solid transparent;
+        }
+        
+        .btn-send .icon-box { background: #EFF6FF; color: #3B82F6; }
+        .btn-receive .icon-box { background: #ECFDF5; color: #10B981; }
+        .btn-loan .icon-box { background: #F5F3FF; color: #8B5CF6; }
+        .btn-topup .icon-box { background: #FFF7ED; color: #F97316; }
+
+        /* --- LIST ITEM --- */
+        .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid #F8FAFC; }
+        .tx-item:last-child { border-bottom: none; }
+        
+        .tx-icon {
+            width: 50px; height: 50px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+
+        /* --- WATCH NAV --- */
+        .watch-strap {
+            height: 54px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .watch-case {
+            width: 68px; height: 68px;
+            background: linear-gradient(135deg, #0052FF 0%, #002D8F 100%);
+            box-shadow: 0 12px 30px rgba(0, 82, 255, 0.35);
+            border: 4px solid white;
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="max-w-md mx-auto relative bg-white">
+
+    <!-- 1. Skeleton -->
+    <div id="skeleton-screen">
+        <div class="flex justify-between items-center mb-10">
+            <div class="flex gap-4">
+                <div class="w-12 h-12 rounded-full skeleton-block"></div>
+                <div class="space-y-2"><div class="w-24 h-4 skeleton-block"></div><div class="w-32 h-6 skeleton-block"></div></div>
+            </div>
+            <div class="w-10 h-10 rounded-full skeleton-block"></div>
+        </div>
+        <div class="h-10 w-48 mx-auto rounded-xl skeleton-block mb-8"></div>
+        <div class="w-full aspect-[1.586/1] rounded-[2rem] skeleton-block mb-12"></div>
+    </div>
+
+    <!-- 2. Main Content -->
+    <div id="main-content" class="min-h-screen pb-40 px-6">
+        
+        <!-- Header -->
+        <header class="pt-8 pb-6 flex justify-between items-center relative">
+            <a href="profile.html" class="relative active:scale-90 transition-transform cursor-pointer">
+                <div class="w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-blue-600 to-blue-200 shadow-sm">
+                    <img src="/IMG_20251214_013513.jpg" alt="Account" class="w-full h-full rounded-full object-cover border-2 border-white">
+                </div>
+                <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+            </a>
+
+            <div class="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-1.5 bg-blue-50/50 rounded-full border border-blue-100">
+                <span class="text-[13px] font-extrabold text-slate-800 tracking-tight">pranav_d_18</span>
+                <i class="fa-solid fa-circle-check text-blue-600 text-[10px]"></i>
+            </div>
+
+            <a href="#" class="w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 active:scale-90 transition-transform">
+                <i class="fa-solid fa-magnifying-glass text-[15px]"></i>
+            </a>
+        </header>
+
+        <!-- Balance -->
+        <div class="text-center mb-6">
+            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Balance</p>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">$429,487.93</h1>
+        </div>
+
+        <!-- Clean Glass Card -->
+        <div class="relative mb-10 group cursor-pointer">
+            <div class="clean-card">
+                <!-- Golden Chip -->
+                <div class="chip shadow-md"><div class="chip-inner"></div></div>
+                <!-- Visa Logo -->
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" 
+                     class="h-7 brightness-0 invert opacity-90" alt="Visa">
+                
+                <!-- Glass Reflections -->
+                <div class="absolute -right-10 -top-10 w-48 h-48 bg-white/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-blue-400/30 rounded-full blur-2xl pointer-events-none"></div>
+            </div>
+            
+            <!-- Number Capsule -->
+            <div class="flex justify-center -mt-5 relative z-10">
+                <div class="number-pill bg-white shadow-lg shadow-slate-200/50">
+                    **** **** **** 8144
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="grid grid-cols-4 gap-4 mb-10">
+            <a href="sent.html" class="action-btn btn-send">
+                <div class="icon-box"><i class="fa-solid fa-paper-plane"></i></div>
+                <span class="text-[11px] font-bold text-slate-600">Sent</span>
+            </a>
+            <a href="receive.html" class="action-btn btn-receive">
+                <div class="icon-box"><i class="fa-solid fa-arrow-down"></i></div>
+                <span class="text-[11px] font-bold text-slate-600">Receive</span>
+            </a>
+            <a href="loan.html" class="action-btn btn-loan">
+                <div class="icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <span class="text-[11px] font-bold text-slate-600">Loan</span>
+            </a>
+            <a href="topup.html" class="action-btn btn-topup">
+                <div class="icon-box"><i class="fa-solid fa-wallet"></i></div>
+                <span class="text-[11px] font-bold text-slate-600">Top Up</span>
+            </a>
+        </div>
+
+        <!-- Transactions -->
+        <div class="space-y-2">
+            <div class="flex justify-between items-end px-1 mb-4">
+                <h3 class="text-[18px] font-extrabold text-slate-900">Activity</h3>
+                <a href="transactions.html" class="text-blue-600 text-[12px] font-bold hover:underline">View All</a>
+            </div>
+
+            <!-- Mike (Income) -->
+            <div class="tx-item" onclick="window.location.href='mike.html'">
+                <div class="flex items-center gap-5">
+                    <div class="tx-icon bg-green-50 text-green-600"><i class="fa-solid fa-arrow-down"></i></div>
+                    <div><p class="text-[15px] font-bold text-slate-900">Mike</p><p class="text-[12px] font-medium text-slate-400 mt-0.5">Wire Transfer</p></div>
+                </div>
+                <div class="text-right"><p class="text-[15px] font-extrabold text-green-600">+$28,500.00</p></div>
+            </div>
+
+            <!-- Divyanshi (Expense) -->
+            <div class="tx-item" onclick="window.location.href='divyanshi.html'">
+                <div class="flex items-center gap-5">
+                    <div class="tx-icon bg-slate-100 text-slate-600"><i class="fa-solid fa-user"></i></div>
+                    <div><p class="text-[15px] font-bold text-slate-900">Divyanshi</p><p class="text-[12px] font-medium text-slate-400 mt-0.5">Sent</p></div>
+                </div>
+                <div class="text-right"><p class="text-[15px] font-extrabold text-slate-900">-$1,200.00</p></div>
+            </div>
+
+            <!-- Special ID (Income) -->
+            <div class="tx-item">
+                <div class="flex items-center gap-5">
+                    <div class="tx-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-qrcode"></i></div>
+                    <div><p class="text-[15px] font-bold text-slate-900">user-93216</p><p class="text-[12px] font-medium text-slate-400 mt-0.5">Visa Direct</p></div>
+                </div>
+                <div class="text-right"><p class="text-[15px] font-extrabold text-green-600">+$69.69</p></div>
+            </div>
+            
+            <!-- Netflix (Expense) -->
+            <div class="tx-item border-none">
+                <div class="flex items-center gap-5">
+                    <div class="tx-icon bg-red-50 text-red-600"><i class="fa-solid fa-n"></i></div>
+                    <div><p class="text-[15px] font-bold text-slate-900">Netflix UHD</p><p class="text-[12px] font-medium text-slate-400 mt-0.5">Subscription</p></div>
+                </div>
+                <div class="text-right"><p class="text-[15px] font-extrabold text-slate-900">-$15.49</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Watch Navigation -->
+    <div id="floating-nav" class="fixed bottom-6 left-6 right-6 max-w-[calc(100%-48px)] mx-auto z-50">
+        <div class="relative flex items-center">
+            <nav class="watch-strap w-full rounded-full px-6 flex justify-between items-center">
+                <div class="flex gap-10">
+                    <a href="home.html" class="flex flex-col items-center gap-0.5 text-blue-600"><i class="fa-solid fa-house-chimney text-[18px]"></i><span class="text-[9px] font-bold">Home</span></a>
+                    <a href="cards.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-credit-card text-[18px]"></i><span class="text-[9px] font-bold">Cards</span></a>
+                </div>
+                <div class="flex gap-10">
+                    <a href="stats.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-chart-line text-[18px]"></i><span class="text-[9px] font-bold">Stats</span></a>
+                    <a href="user.html" class="flex flex-col items-center gap-0.5 text-slate-300 hover:text-slate-500 transition-colors"><i class="fa-solid fa-user-circle text-[18px]"></i><span class="text-[9px] font-bold">User</span></a>
+                </div>
+            </nav>
+            <a href="pay.html" class="watch-case rounded-full flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform"><i class="fa-solid fa-qrcode text-[26px]"></i></a>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => { document.body.classList.add('loaded'); }, 1600);
+        };
+    </script>
+</body>
+</html>
+
