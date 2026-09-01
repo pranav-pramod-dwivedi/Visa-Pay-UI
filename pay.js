@@ -70,7 +70,7 @@ function checkUsername() {
     const sug = document.querySelector('.suggestions');
     if (!sug) return;
 
-    const cards = sug.querySelectorAll('> div, .suggestion-item');
+    const cards = sug.querySelectorAll('> div, .suggestion-item, .pay-contact-card');
     cards.forEach(card => {
         const text = (card.textContent || '').toLowerCase();
         if (!q || text.includes(q)) {
@@ -85,13 +85,14 @@ function setQuickAmount(amt) {
     const amtEl = document.getElementById('payment-amount');
     if (amtEl) {
         amtEl.value = amt;
+        amtEl.classList.remove('border-red-500');
         amtEl.focus();
     }
 }
 
 function goToPasscode() {
     const amtEl = document.getElementById('payment-amount');
-    currentAmount = amtEl ? amtEl.value.trim().replace('$', '') : "";
+    currentAmount = amtEl ? amtEl.value.trim().replace(/[^0-9.]/g, '') : "";
     const parsed = parseFloat(currentAmount);
     if (!currentAmount || isNaN(parsed) || parsed <= 0) {
         if (amtEl) {
