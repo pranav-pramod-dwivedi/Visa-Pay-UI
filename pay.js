@@ -93,7 +93,14 @@ function goToPasscode() {
     const amtEl = document.getElementById('payment-amount');
     currentAmount = amtEl ? amtEl.value.trim().replace('$', '') : "";
     const parsed = parseFloat(currentAmount);
-    if (!currentAmount || isNaN(parsed) || parsed <= 0) return alert("Enter a valid amount");
+    if (!currentAmount || isNaN(parsed) || parsed <= 0) {
+        if (amtEl) {
+            amtEl.classList.add('border-red-500');
+            amtEl.focus();
+            setTimeout(() => amtEl.classList.remove('border-red-500'), 1500);
+        }
+        return;
+    }
 
     currentAmount = parsed.toFixed(2);
 
@@ -171,6 +178,15 @@ window.onclick = function(e) {
 
 // Keyboard support for Enter, Escape, and PIN input
 document.addEventListener('keydown', function(e) {
+    const successOverlay = document.getElementById('success-overlay');
+    const isSuccessOpen = successOverlay && successOverlay.style.display === 'flex';
+    if (isSuccessOpen) {
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+            closeSuccess();
+            return;
+        }
+    }
+
     const passcodeModal = document.getElementById('passcode-modal');
     const isPasscodeOpen = passcodeModal && passcodeModal.style.display === 'flex';
 
