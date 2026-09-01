@@ -15,9 +15,17 @@ function openUniversalPay() {
         amtStage.style.display = 'none';
     }
     const sug = document.querySelector('.suggestions');
-    if (sug) sug.style.display = 'flex';
+    if (sug) {
+        sug.style.display = 'flex';
+        // Reset search visibility
+        const cards = sug.querySelectorAll('.pay-contact-card, > div');
+        cards.forEach(card => card.style.display = '');
+    }
     const searchInp = document.getElementById('pay-search-input');
-    if (searchInp) searchInp.value = "";
+    if (searchInp) {
+        searchInp.value = "";
+        searchInp.focus();
+    }
 }
 
 function selectUser(name, type, src) {
@@ -47,23 +55,47 @@ function selectUser(name, type, src) {
     
     const nameEl = document.getElementById('up-name');
     if (nameEl) nameEl.innerText = name;
+
+    const amtInp = document.getElementById('payment-amount');
+    if (amtInp) {
+        amtInp.value = "";
+        setTimeout(() => amtInp.focus(), 150);
+    }
 }
 
 function checkUsername() {
     const valEl = document.getElementById('pay-search-input');
     if (!valEl) return;
-    const val = valEl.value;
-    const hint = document.getElementById('visa-hint');
-    if (val.length > 3 && !val.includes('@')) {
-        // Logic to show hint if needed
+    const q = valEl.value.trim().toLowerCase();
+    const sug = document.querySelector('.suggestions');
+    if (!sug) return;
+
+    const cards = sug.querySelectorAll('> div, .suggestion-item');
+    cards.forEach(card => {
+        const text = (card.textContent || '').toLowerCase();
+        if (!q || text.includes(q)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function setQuickAmount(amt) {
+    const amtEl = document.getElementById('payment-amount');
+    if (amtEl) {
+        amtEl.value = amt;
+        amtEl.focus();
     }
 }
 
 function goToPasscode() {
     const amtEl = document.getElementById('payment-amount');
-    currentAmount = amtEl ? amtEl.value.trim() : "";
+    currentAmount = amtEl ? amtEl.value.trim().replace('$', '') : "";
     const parsed = parseFloat(currentAmount);
     if (!currentAmount || isNaN(parsed) || parsed <= 0) return alert("Enter a valid amount");
+
+    currentAmount = parsed.toFixed(2);
 
     // Close Universal, Open Passcode
     const uniModal = document.getElementById('universal-modal');
@@ -116,7 +148,7 @@ function playSuccess() {
     const amtEl = document.getElementById('final-amt');
     if (amtEl) amtEl.innerText = '$' + currentAmount;
     const userEl = document.getElementById('final-user');
-    if (userEl) userEl.innerText = currentPayee;
+    if (userEl) userEl.innerText = currentPayee || 'Merchant';
 }
 
 function closeSuccess() { location.reload(); }
@@ -137,7 +169,7 @@ window.onclick = function(e) {
     if (e.target === modal || e.target === passcodeModal) closeModals();
 };
 
-// Desktop keyboard support for PIN input and modal dismiss
+// Keyboard support for Enter, Escape, and PIN input
 document.addEventListener('keydown', function(e) {
     const passcodeModal = document.getElementById('passcode-modal');
     const isPasscodeOpen = passcodeModal && passcodeModal.style.display === 'flex';
@@ -153,6 +185,11 @@ document.addEventListener('keydown', function(e) {
         } else if (e.key === 'Backspace') {
             passcode = passcode.slice(0, -1);
             updateDots();
+        }
+    } else {
+        const amtEl = document.getElementById('payment-amount');
+        if (amtEl && document.activeElement === amtEl && e.key === 'Enter') {
+            goToPasscode();
         }
     }
 });
