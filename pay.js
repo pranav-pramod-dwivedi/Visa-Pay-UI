@@ -18,7 +18,7 @@ function openUniversalPay() {
     if (sug) {
         sug.style.display = 'flex';
         // Reset search visibility
-        const cards = sug.querySelectorAll('.pay-contact-card, > div');
+        const cards = sug.querySelectorAll('.pay-contact-card, :scope > div, .suggestion-item');
         cards.forEach(card => card.style.display = '');
     }
     const searchInp = document.getElementById('pay-search-input');
@@ -43,8 +43,10 @@ function selectUser(name, type, src) {
     // Update Avatar
     const avatar = document.getElementById('up-avatar');
     if (avatar) {
-        if (type === 'img') avatar.style.backgroundImage = `url('${src}')`;
-        else if (type === 'icon') {
+        if (type === 'img') {
+            avatar.innerHTML = '';
+            avatar.style.backgroundImage = `url('${src}')`;
+        } else if (type === 'icon') {
             avatar.style.backgroundImage = 'none';
             avatar.innerHTML = `<div class="w-full h-full bg-red-600 flex items-center justify-center text-white font-black">N</div>`;
         } else {
@@ -70,7 +72,7 @@ function checkUsername() {
     const sug = document.querySelector('.suggestions');
     if (!sug) return;
 
-    const cards = sug.querySelectorAll('> div, .suggestion-item, .pay-contact-card');
+    const cards = sug.querySelectorAll(':scope > div, .suggestion-item, .pay-contact-card');
     cards.forEach(card => {
         const text = (card.textContent || '').toLowerCase();
         if (!q || text.includes(q)) {
