@@ -341,7 +341,7 @@
     </div>
 
     <!-- OVERLAY POPUP SYSTEM -->
-    <div id="modal-overlay" class="modal-overlay" onclick="closePopup(event)">
+    <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" onclick="closePopup(event)">
         <div class="custom-modal" id="modal-content"></div>
     </div>
 
@@ -457,13 +457,23 @@
 
             content.innerHTML = html;
             modal.classList.add('active');
+            if (type === 'username') {
+                const inp = content.querySelector('input');
+                if (inp) setTimeout(() => inp.focus(), 50);
+            }
         }
 
         function closePopup(e, force = false) {
-            if (force || e.target.id === 'modal-overlay') {
+            if (force || (e && e.target && e.target.id === 'modal-overlay')) {
                 document.getElementById('modal-overlay').classList.remove('active');
             }
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePopup(null, true);
+            }
+        });
     </script>
 </body>
 </html>
