@@ -96,7 +96,7 @@ function goToPasscode() {
     const amtEl = document.getElementById('payment-amount');
     currentAmount = amtEl ? amtEl.value.trim().replace(/[^0-9.]/g, '') : "";
     const parsed = parseFloat(currentAmount);
-    if (!currentAmount || isNaN(parsed) || parsed <= 0) {
+    if (!currentAmount || isNaN(parsed) || parsed <= 0 || parsed > 1000000) {
         if (amtEl) {
             amtEl.classList.add('border-red-500');
             amtEl.focus();
@@ -207,8 +207,18 @@ document.addEventListener('keydown', function(e) {
         }
     } else {
         const amtEl = document.getElementById('payment-amount');
+        const searchInp = document.getElementById('pay-search-input');
         if (amtEl && document.activeElement === amtEl && e.key === 'Enter') {
             goToPasscode();
+        } else if (searchInp && document.activeElement === searchInp && e.key === 'Enter') {
+            const sug = document.querySelector('.suggestions');
+            if (sug) {
+                const visible = Array.from(sug.querySelectorAll(':scope > div, .suggestion-item, .pay-contact-card')).find(c => c.style.display !== 'none');
+                if (visible) {
+                    e.preventDefault();
+                    visible.click();
+                }
+            }
         }
     }
 });
