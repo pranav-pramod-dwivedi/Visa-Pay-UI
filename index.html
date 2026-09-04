@@ -119,6 +119,27 @@
             from { transform: translate(-10%, -10%) scale(1); }
             to { transform: translate(10%, 10%) scale(1.2); }
         }
+
+        /* --- RESPECT REDUCED MOTION --- */
+        /* Users who request reduced motion get an instant, stable logo
+           instead of the streak + glow animations, which can trigger
+           vestibular discomfort. Full motion is preserved for everyone else. */
+        @media (prefers-reduced-motion: reduce) {
+            .visa-logo {
+                opacity: 1;
+                transform: none;
+                animation: none;
+                filter: brightness(0) invert(1);
+            }
+            .pay-box {
+                opacity: 1;
+                transform: none;
+                filter: none;
+                animation: none;
+            }
+            .ambient-light { animation: none; }
+            #fade-overlay { transition: opacity 0.2s ease; }
+        }
     </style>
 </head>
 <body>
