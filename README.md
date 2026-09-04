@@ -51,3 +51,7 @@ Clone the repository and open `index.html` in your browser.
 
 ```bash
 git clone https://github.com/pranav-pramod-dwivedi/Visa-Pay-UI.git
+cd Visa-Pay-UI
+```
+
+Then open `index.html` in any modern browser — the splash animation plays and redirects to the home screen automatically.
